@@ -24,7 +24,7 @@ It also handles a common friction point: after scrolling in reading mode, switch
 | `G`            | Scroll to the bottom of the document            |
 | `f`            | Enter link hint mode — label every visible link |
 
-In link hint mode, type a hint label to **focus** that link (internal links also show Obsidian's hover preview). With a link focused, press `Enter` to follow it — internal links open the note, external links open the URL. Press `Esc` to cancel.
+In link hint mode, type a hint label to select a link. Internal links receive focus and show Obsidian's hover preview; press `Enter` to follow them or `Esc` to cancel. External links open immediately in the system default browser.
 
 Keys are only active when:
 
@@ -46,12 +46,12 @@ Holding a key (e.g., `j`) produces repeated `keydown` events. Each event is hand
 
 ### Link Hint Mode
 
-Pressing `f` enumerates every link currently visible in the viewport and overlays a short hint label on each — recreating the feel of the [Vimium](https://github.com/philc/vimium) browser extension for Chrome, where you press a key, every link gets a label, and you type the label to jump. Typing a label focuses the link rather than opening it immediately:
+Pressing `f` enumerates every link currently visible in the viewport and overlays a short hint label on each — recreating the feel of the [Vimium](https://github.com/philc/vimium) browser extension for Chrome. Selecting a hint behaves according to the link type:
 
 - **Internal links** → the link is highlighted, scrolled into view, and Obsidian's page preview popover is shown (requires the **Page Preview** core plugin).
-- **External links** → the link is highlighted and scrolled into view.
+- **External links** → the URL opens immediately in the system default browser.
 
-With a link focused, `Enter` activates it — internal links navigate via `openLinkText`, external links open in a new window. `Esc` clears the focus. Hints are dismissed automatically if you scroll, resize, switch panes, or toggle out of reading mode.
+With an internal link focused, `Enter` navigates via `openLinkText` and `Esc` clears the focus. Hints are dismissed automatically if you scroll, resize, switch panes, or toggle out of reading mode.
 
 > [!NOTE]
 > The hover preview's lifetime is controlled by the **Page Preview** core plugin, which re-evaluates hover state from the *physical* mouse pointer. If the pointer is stationary the popover stays open; any mouse movement (or content shifting under the pointer after the focus scroll) makes Page Preview notice the link is not actually hovered and dismiss it. This is core-plugin behavior, not something this plugin controls. If you want pinnable, persistent previews, the [Hover Editor](https://github.com/nothingislost/obsidian-hover-editor) plugin works well alongside this one.

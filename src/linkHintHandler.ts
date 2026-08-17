@@ -13,10 +13,10 @@ interface Hint {
 /**
  * Vimium-style link hint mode for reading mode.
  *
- * Press `f` to label every visible link with a hint. Type the hint to focus
- * that link — internal links also trigger Obsidian's page preview popover.
- * With a link focused, press Enter to activate it (navigate internal links,
- * open external URLs) or Escape to clear the focus.
+ * Press `f` to label every visible link with a hint. Typing an exact hint
+ * focuses an internal link and triggers Obsidian's page preview popover.
+ * An external-link hint opens the URL immediately. Press Enter to activate a
+ * focused internal link or Escape to clear the focus.
  */
 export class LinkHintHandler {
 	private plugin: Plugin;
@@ -191,7 +191,11 @@ export class LinkHintHandler {
 		if (exact && matches.length === 1) {
 			const link = exact.link;
 			this.exitHintMode();
-			this.focusLink(link);
+			if (link.classList.contains('internal-link')) {
+				this.focusLink(link);
+			} else {
+				this.activateLink(link);
+			}
 			return;
 		}
 
