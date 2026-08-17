@@ -1,7 +1,7 @@
 {
 	"id": "vim-reading-nav",
 	"name": "Vim Reading Navigation",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"minAppVersion": "1.1.0",
 	"description": "Adds vim-style scrolling (j/k, Ctrl+D/U or d/u, gg, G) and Vimium-style link hints (f) in reading mode when vim key bindings are enabled.",
 	"author": "argus",
