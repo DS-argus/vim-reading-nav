@@ -26,3 +26,58 @@
 	outline-offset: 2px;
 	border-radius: 2px;
 }
+
+/* Persistent internal-link preview */
+.vim-reading-nav-preview {
+	position: fixed;
+	z-index: var(--layer-popover, 30);
+	width: min(36rem, calc(100vw - 24px));
+	max-height: min(65vh, 38rem);
+	display: flex;
+	flex-direction: column;
+	color: var(--text-normal);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: var(--shadow-s);
+	overflow: hidden;
+}
+
+.vim-reading-nav-preview-header {
+	flex: 0 0 auto;
+	padding: var(--size-4-2) var(--size-4-3);
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vim-reading-nav-preview-title {
+	display: block;
+	overflow: hidden;
+	font-weight: var(--font-semibold);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vim-reading-nav-preview-status {
+	padding: var(--size-4-4);
+	color: var(--text-muted);
+}
+
+.vim-reading-nav-preview-body {
+	font-size: var(--font-text-size);
+	line-height: var(--line-height-normal);
+	min-height: 0;
+	overflow: auto;
+	padding: var(--size-4-3) var(--size-4-4);
+}
+
+.vim-reading-nav-preview-body :not(pre) > code {
+	line-height: inherit;
+	padding-block: 0.05em;
+}
+
+/* Preview content is display-only; navigation remains on the focused source link. */
+.vim-reading-nav-preview-body :is(a, button, input, select, textarea, summary, [role="button"]) {
+	pointer-events: none;
+	cursor: default;
+}
