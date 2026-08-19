@@ -5,7 +5,7 @@ An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://gith
 > A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, an `f` link hint mode, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
 
 > [!NOTE]
-> These key mappings do **not** require Obsidian's **Settings → Editor → Vim key bindings** option. Reading mode renders static HTML rather than an editor, so this plugin handles those keys itself and works with Vim key bindings on or off. Enabling the plugin is the only opt-in required, and editing-mode Vim behavior is left entirely to Obsidian.
+> Obsidian's **Vim key bindings** setting is not required.
 
 ## Features
 
