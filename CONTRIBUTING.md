@@ -48,9 +48,9 @@ Uses ESLint with [`eslint-plugin-obsidianmd`](https://github.com/obsidianmd/esli
 src/
   main.ts          # Plugin entry point — lifecycle only (onload, onunload)
   scrollHandler.ts   # Keydown listener and vim scroll commands for reading mode
-  linkHintHandler.ts # Vimium-style link hint mode (f) with hover preview
+  linkHintHandler.ts # Vimium-style link hint mode (f) with persistent previews
   cursorManager.ts   # Cursor correction when switching reading → source mode
-  viewUtils.ts     # Shared guards/lookups (modal focus, vim mode, scroll element)
+  viewUtils.ts     # Shared guards/lookups (modal focus, reading view, scroll element)
   types.ts         # Shared TypeScript interfaces
 esbuild.config.mjs # Bundle configuration
 eslint.config.mts  # Lint configuration
@@ -67,8 +67,7 @@ versions.json      # Plugin version → minimum Obsidian version map
    ```
    The folder must contain `main.js`, `manifest.json`, and `styles.css`.
 3. In Obsidian, enable **Settings → Community plugins → Vim Reading Navigation**.
-4. Enable **Settings → Editor → Vim key bindings**.
-5. Open a note in **Reading mode** and exercise the key mappings (`j`, `k`, `d`/`Ctrl+D`, `u`/`Ctrl+U`, `gg`, `G`, `f`).
+4. Open a note in **Reading mode** and exercise the key mappings (`j`, `k`, `d`/`Ctrl+D`, `u`/`Ctrl+U`, `gg`, `G`, `f`, `Shift+J`/`Shift+K`).
 
 ## Coding conventions
 

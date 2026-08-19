@@ -1,5 +1,4 @@
 import { App, MarkdownView } from 'obsidian';
-import { VaultWithConfig } from './types';
 
 /**
  * Shared guards and lookups used by both the scroll handler and the link
@@ -21,11 +20,6 @@ export function getPreviewViewIn(app: App, doc: Document): MarkdownView | null {
 
 export function getScrollElement(view: MarkdownView): HTMLElement | null {
 	return view.containerEl.querySelector<HTMLElement>('.markdown-preview-view');
-}
-
-/** Obsidian exposes no public API for this; getConfig is the de-facto way. */
-export function isVimModeEnabled(app: App): boolean {
-	return (app.vault as VaultWithConfig).getConfig('vimMode') === true;
 }
 
 /**

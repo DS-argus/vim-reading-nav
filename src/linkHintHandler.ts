@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin } from 'obsidian';
 import { PersistentLinkPreview } from './persistentLinkPreview';
-import { getPreviewViewIn, getScrollElement, isFocusInModal, isVimModeEnabled } from './viewUtils';
+import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
 
@@ -114,7 +114,7 @@ export class LinkHintHandler {
 		}
 
 		const view = getPreviewViewIn(this.plugin.app, doc);
-		if (!view || !isVimModeEnabled(this.plugin.app)) return;
+		if (!view) return;
 		if (evt.ctrlKey || evt.metaKey || evt.altKey) return;
 		if (evt.key === 'f') {
 			this.consume(evt);

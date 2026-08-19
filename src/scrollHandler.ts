@@ -1,5 +1,5 @@
 import { Plugin } from 'obsidian';
-import { getPreviewViewIn, getScrollElement, isFocusInModal, isVimModeEnabled } from './viewUtils';
+import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const DOUBLE_G_TIMEOUT_MS = 500;
 const FALLBACK_LINE_HEIGHT_PX = 24;
@@ -25,7 +25,6 @@ export class ReadingModeScrollHandler {
 
 		const view = getPreviewViewIn(this.plugin.app, doc);
 		if (!view) return;
-		if (!isVimModeEnabled(this.plugin.app)) return;
 
 		const scrollEl = getScrollElement(view);
 		if (!scrollEl) return;

@@ -1,4 +1,4 @@
-import { Editor, Vault } from 'obsidian';
+import { Editor } from 'obsidian';
 
 /** Screen coordinates returned by CodeMirror's coordsAtPos */
 export interface CMCoords {
@@ -19,9 +19,4 @@ export interface CMEditorView {
 /** Obsidian's Editor extended with the underlying CodeMirror EditorView */
 export interface EditorWithCM extends Editor {
 	cm: CMEditorView;
-}
-
-/** Obsidian exposes getConfig on Vault but does not include it in the public types */
-export interface VaultWithConfig extends Vault {
-	getConfig(key: string): unknown;
 }
