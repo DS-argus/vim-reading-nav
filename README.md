@@ -20,6 +20,7 @@ An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://gith
 | Reading mode | `j` / `k` | Scroll down / up |
 | Reading mode | `d` / `Ctrl+D` | Scroll down half a page |
 | Reading mode | `u` / `Ctrl+U` | Scroll up half a page |
+| Reading mode | `Ctrl+F` / `Ctrl+B` | Scroll down / up a full page |
 | Reading mode | `gg` / `G` | Scroll to the top / bottom |
 | Reading mode | `f` | Show hints for visible links |
 | Hint mode | Hint characters | Select a link |

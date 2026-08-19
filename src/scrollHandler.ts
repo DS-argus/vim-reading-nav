@@ -79,12 +79,24 @@ export class ReadingModeScrollHandler {
 					evt.preventDefault();
 					this.scrollHalfPage(scrollEl, -1);
 					break;
+				case 'f':
+					evt.preventDefault();
+					this.scrollFullPage(scrollEl, 1);
+					break;
+				case 'b':
+					evt.preventDefault();
+					this.scrollFullPage(scrollEl, -1);
+					break;
 			}
 		}
 	}
 
 	private scrollHalfPage(scrollEl: HTMLElement, direction: 1 | -1): void {
 		scrollEl.scrollTop += direction * (scrollEl.clientHeight / 2);
+	}
+
+	private scrollFullPage(scrollEl: HTMLElement, direction: 1 | -1): void {
+		scrollEl.scrollTop += direction * scrollEl.clientHeight;
 	}
 
 	private getLineHeight(scrollEl: HTMLElement): number {
