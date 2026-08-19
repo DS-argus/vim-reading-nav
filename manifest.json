@@ -3,7 +3,7 @@
 	"name": "Vim Reading Navigation",
 	"version": "1.2.0",
 	"minAppVersion": "1.1.0",
-	"description": "Adds vim-style scrolling (j/k, Ctrl+D/U or d/u, gg, G) and Vimium-style link hints (f) in reading mode when vim key bindings are enabled.",
+	"description": "Adds vim-style scrolling (j/k, Ctrl+D/U or d/u, gg, G), Vimium-style link hints (f), and persistent link previews in reading mode.",
 	"author": "argus",
 	"authorUrl": "https://github.com/DS-argus",
 	"isDesktopOnly": false

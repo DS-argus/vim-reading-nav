@@ -1,8 +1,11 @@
 # Vim Reading Navigation
 
-An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://github.com/philc/vimium)-style **link hints** to **reading mode** when Obsidian's vim key bindings are enabled.
+An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://github.com/philc/vimium)-style **link hints** to **reading mode**.
 
 > A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, an `f` link hint mode, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
+
+> [!NOTE]
+> Obsidian's **Vim key bindings** setting is not required.
 
 ## Features
 
@@ -27,7 +30,7 @@ An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://gith
 | Focused internal link | `Enter` | Follow the link and close the preview |
 | Hint or preview mode | `Esc` | Cancel and close |
 
-Key mappings are active only when the current Markdown view is in **Reading mode** and Obsidian's **Vim key bindings** setting is enabled. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
+Key mappings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
 
 ## Link previews
 
@@ -51,9 +54,8 @@ Current limitations:
 
 ## Usage
 
-1. Enable **Settings → Editor → Vim key bindings**.
-2. Open a Markdown note in **Reading mode**.
-3. Use the mappings above; press `f` to select links.
+1. Open a Markdown note in **Reading mode**.
+2. Use the mappings above; press `f` to select links.
 
 ## Installation
 
