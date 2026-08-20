@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin } from 'obsidian';
 import { PersistentLinkPreview } from './persistentLinkPreview';
-import { getPreviewViewIn, getScrollElement, isFocusInModal, isVimModeEnabled } from './viewUtils';
+import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
 
@@ -114,7 +114,7 @@ export class LinkHintHandler {
 		}
 
 		const view = getPreviewViewIn(this.plugin.app, doc);
-		if (!view || !isVimModeEnabled(this.plugin.app)) return;
+		if (!view) return;
 		if (evt.ctrlKey || evt.metaKey || evt.altKey) return;
 		if (evt.key === 'f') {
 			this.consume(evt);
@@ -228,12 +228,12 @@ export class LinkHintHandler {
 
 	private createHintEl(label: string, link: HTMLAnchorElement, doc: Document): HTMLElement {
 		const rect = link.getBoundingClientRect();
-		const el = doc.createElement('span');
-		el.className = 'vim-reading-nav-hint';
-		el.textContent = label.toUpperCase();
+		const el = doc.body.createSpan({
+			cls: 'vim-reading-nav-hint',
+			text: label.toUpperCase(),
+		});
 		el.style.left = `${rect.left}px`;
 		el.style.top = `${rect.top + rect.height / 2}px`;
-		doc.body.append(el);
 		return el;
 	}
 

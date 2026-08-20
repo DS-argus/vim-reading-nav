@@ -1,102 +1,120 @@
-import { Plugin } from 'obsidian';
-import { getPreviewViewIn, getScrollElement, isFocusInModal, isVimModeEnabled } from './viewUtils';
+import type { Plugin } from 'obsidian';
+import { bindingMatchesEvent } from './settings';
+import type { VimReadingNavSettings } from './settings';
+import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const DOUBLE_G_TIMEOUT_MS = 500;
 const FALLBACK_LINE_HEIGHT_PX = 24;
 
+type ScrollDirection = 1 | -1;
+
 export class ReadingModeScrollHandler {
 	private lastGPressTime = 0;
-	private plugin: Plugin;
 
-	constructor(plugin: Plugin) {
-		this.plugin = plugin;
-	}
+	constructor(
+		private readonly plugin: Plugin,
+		private readonly settings: VimReadingNavSettings,
+	) {}
 
-	/** Attach the keydown listener to one document (main window or pop-out). */
+	/** Attach keydown listeners to one document (main window or pop-out). */
 	registerTo(doc: Document): void {
 		this.plugin.registerDomEvent(doc, 'keydown', (evt: KeyboardEvent) => {
-			this.handleKeyDown(evt, doc);
+			this.handleConfiguredKeyDown(evt, doc);
+		}, true);
+		this.plugin.registerDomEvent(doc, 'keydown', (evt: KeyboardEvent) => {
+			this.handleBareKeyDown(evt, doc);
 		});
 	}
 
-	private handleKeyDown(evt: KeyboardEvent, doc: Document): void {
-		// Don't intercept keys when a modal/dialog is open or focus is in an input
-		if (isFocusInModal(evt, doc)) return;
-
-		const view = getPreviewViewIn(this.plugin.app, doc);
-		if (!view) return;
-		if (!isVimModeEnabled(this.plugin.app)) return;
-
-		const scrollEl = getScrollElement(view);
+	private handleConfiguredKeyDown(evt: KeyboardEvent, doc: Document): void {
+		const scrollEl = this.getReadingScrollElement(evt, doc);
 		if (!scrollEl) return;
 
-		const { key, ctrlKey, metaKey, altKey } = evt;
+		const direction = this.getConfiguredDirection(evt);
+		if (!direction) return;
 
-		// Ignore combinations with Meta/Alt to avoid interfering with system shortcuts
-		if (metaKey || altKey) return;
-
-		if (!ctrlKey) {
-			switch (key) {
-				case 'j':
-					evt.preventDefault();
-					scrollEl.scrollTop += this.getLineHeight(scrollEl);
-					break;
-				case 'k':
-					evt.preventDefault();
-					scrollEl.scrollTop -= this.getLineHeight(scrollEl);
-					break;
-				case 'd':
-					evt.preventDefault();
-					this.scrollHalfPage(scrollEl, 1);
-					break;
-				case 'u':
-					evt.preventDefault();
-					this.scrollHalfPage(scrollEl, -1);
-					break;
-				case 'g': {
-					evt.preventDefault();
-					const now = Date.now();
-					if (now - this.lastGPressTime <= DOUBLE_G_TIMEOUT_MS) {
-						scrollEl.scrollTop = 0;
-						this.lastGPressTime = 0;
-					} else {
-						this.lastGPressTime = now;
-					}
-					break;
-				}
-				case 'G':
-					evt.preventDefault();
-					scrollEl.scrollTop = scrollEl.scrollHeight;
-					break;
-			}
+		evt.preventDefault();
+		evt.stopImmediatePropagation();
+		if (direction.distance === 'half') {
+			this.scrollHalfPage(scrollEl, direction.amount);
 		} else {
-			switch (key) {
-				case 'd':
-					evt.preventDefault();
-					this.scrollHalfPage(scrollEl, 1);
-					break;
-				case 'u':
-					evt.preventDefault();
-					this.scrollHalfPage(scrollEl, -1);
-					break;
-				case 'f':
-					evt.preventDefault();
-					this.scrollFullPage(scrollEl, 1);
-					break;
-				case 'b':
-					evt.preventDefault();
-					this.scrollFullPage(scrollEl, -1);
-					break;
-			}
+			this.scrollFullPage(scrollEl, direction.amount);
 		}
 	}
 
-	private scrollHalfPage(scrollEl: HTMLElement, direction: 1 | -1): void {
+	private handleBareKeyDown(evt: KeyboardEvent, doc: Document): void {
+		const scrollEl = this.getReadingScrollElement(evt, doc);
+		if (!scrollEl) return;
+
+		const { key, ctrlKey, metaKey, altKey } = evt;
+		if (ctrlKey || metaKey || altKey) return;
+
+		switch (key) {
+			case 'j':
+				evt.preventDefault();
+				scrollEl.scrollTop += this.getLineHeight(scrollEl);
+				break;
+			case 'k':
+				evt.preventDefault();
+				scrollEl.scrollTop -= this.getLineHeight(scrollEl);
+				break;
+			case 'd':
+				evt.preventDefault();
+				this.scrollHalfPage(scrollEl, 1);
+				break;
+			case 'u':
+				evt.preventDefault();
+				this.scrollHalfPage(scrollEl, -1);
+				break;
+			case 'g': {
+				evt.preventDefault();
+				const now = Date.now();
+				if (now - this.lastGPressTime <= DOUBLE_G_TIMEOUT_MS) {
+					scrollEl.scrollTop = 0;
+					this.lastGPressTime = 0;
+				} else {
+					this.lastGPressTime = now;
+				}
+				break;
+			}
+			case 'G':
+				evt.preventDefault();
+				scrollEl.scrollTop = scrollEl.scrollHeight;
+				break;
+		}
+	}
+
+	private getReadingScrollElement(evt: KeyboardEvent, doc: Document): HTMLElement | null {
+		if (isFocusInModal(evt, doc)) return null;
+
+		const view = getPreviewViewIn(this.plugin.app, doc);
+		return view ? getScrollElement(view) : null;
+	}
+
+	private getConfiguredDirection(evt: KeyboardEvent): { amount: ScrollDirection; distance: 'half' | 'full' } | null {
+		if (bindingMatchesEvent(this.settings.halfPageDown, evt)) return { amount: 1, distance: 'half' };
+		if (bindingMatchesEvent(this.settings.halfPageUp, evt)) return { amount: -1, distance: 'half' };
+		if (bindingMatchesEvent(this.settings.fullPageDown, evt)) return { amount: 1, distance: 'full' };
+		if (bindingMatchesEvent(this.settings.fullPageUp, evt)) return { amount: -1, distance: 'full' };
+		return null;
+	}
+
+	private scrollHalfPage(scrollEl: HTMLElement, direction: ScrollDirection): void {
 		scrollEl.scrollTop += direction * (scrollEl.clientHeight / 2);
 	}
 
-	private scrollFullPage(scrollEl: HTMLElement, direction: 1 | -1): void {
-		scrollEl.scrollTop += direction * scrollEl.clientHeight;
+	private scrollFullPage(scrollEl: HTMLElement, direction: ScrollDirection): void {
+		const lineHeight = this.getCssLineHeight(scrollEl);
+		const distance = Math.max(lineHeight, scrollEl.clientHeight - (2 * lineHeight));
+		scrollEl.scrollTop += direction * distance;
+	}
+
+	private getCssLineHeight(scrollEl: HTMLElement): number {
+		const win = scrollEl.ownerDocument.defaultView;
+		if (!win) return FALLBACK_LINE_HEIGHT_PX;
+
+		const lineHeight = Number.parseFloat(win.getComputedStyle(scrollEl).lineHeight);
+		return lineHeight > 0 ? lineHeight : FALLBACK_LINE_HEIGHT_PX;
 	}
 
 	private getLineHeight(scrollEl: HTMLElement): number {

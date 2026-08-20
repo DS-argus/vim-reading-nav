@@ -1,7 +1,7 @@
 {
 	"name": "vim-reading-nav",
-	"version": "1.2.0",
-	"description": "Adds vim-style scrolling (j/k, Ctrl+D/U or d/u, gg, G) and Vimium-style link hints (f) in reading mode when vim key bindings are enabled.",
+	"version": "1.2.1",
+	"description": "Adds vim-style scrolling (j/k, Ctrl+D/U or d/u, gg, G), Vimium-style link hints (f), and persistent link previews in reading mode.",
 	"main": "main.js",
 	"type": "module",
 	"author": "argus",
@@ -16,9 +16,9 @@
 	"license": "0-BSD",
 	"devDependencies": {
 		"@eslint/js": "9.30.1",
-		"@types/node": "^16.11.6",
+		"@types/node": "^22.0.0",
 		"esbuild": "0.25.5",
-		"eslint-plugin-obsidianmd": "0.1.9",
+		"eslint-plugin-obsidianmd": "0.4.1",
 		"globals": "14.0.0",
 		"jiti": "2.6.1",
 		"obsidian": "^1.12.3",
