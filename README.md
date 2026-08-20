@@ -1,11 +1,11 @@
 # Vim Reading Navigation
 
-An Obsidian plugin that brings vim-style **scrolling** and [Vimium](https://github.com/philc/vimium)-style **link hints** to **reading mode**.
-
-> A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, an `f` link hint mode, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
+Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without leaving the keyboard.
 
 > [!NOTE]
 > Obsidian's **Vim key bindings** setting is not required.
+
+> A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, an `f` link hint mode, persistent link previews, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
 
 ## Features
 
