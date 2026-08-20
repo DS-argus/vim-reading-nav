@@ -228,12 +228,12 @@ export class LinkHintHandler {
 
 	private createHintEl(label: string, link: HTMLAnchorElement, doc: Document): HTMLElement {
 		const rect = link.getBoundingClientRect();
-		const el = doc.createElement('span');
-		el.className = 'vim-reading-nav-hint';
-		el.textContent = label.toUpperCase();
+		const el = doc.body.createSpan({
+			cls: 'vim-reading-nav-hint',
+			text: label.toUpperCase(),
+		});
 		el.style.left = `${rect.left}px`;
 		el.style.top = `${rect.top + rect.height / 2}px`;
-		doc.body.append(el);
 		return el;
 	}
 

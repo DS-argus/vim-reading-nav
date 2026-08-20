@@ -62,8 +62,9 @@ export class PersistentLinkPreview {
 				return;
 			}
 
-			bodyEl = doc.createElement('div');
-			bodyEl.className = 'vim-reading-nav-preview-body markdown-rendered';
+			bodyEl = shellEl.createDiv({
+				cls: 'vim-reading-nav-preview-body markdown-rendered',
+			});
 			this.replaceStatus(shellEl, bodyEl);
 			component = new Component();
 			component.load();
@@ -136,19 +137,13 @@ export class PersistentLinkPreview {
 	}
 
 	private createShell(doc: Document, linktext: string): HTMLElement {
-		const shellEl = doc.createElement('section');
-		shellEl.className = 'vim-reading-nav-preview';
-		const headerEl = doc.createElement('header');
-		headerEl.className = 'vim-reading-nav-preview-header';
-		const titleEl = doc.createElement('span');
-		titleEl.className = 'vim-reading-nav-preview-title';
-		titleEl.textContent = linktext;
-		headerEl.append(titleEl);
-		const statusEl = doc.createElement('div');
-		statusEl.className = 'vim-reading-nav-preview-status';
-		statusEl.textContent = 'Loading preview…';
-		shellEl.append(headerEl, statusEl);
-		doc.body.append(shellEl);
+		const shellEl = doc.body.createEl('section', { cls: 'vim-reading-nav-preview' });
+		const headerEl = shellEl.createEl('header', { cls: 'vim-reading-nav-preview-header' });
+		headerEl.createSpan({ cls: 'vim-reading-nav-preview-title', text: linktext });
+		shellEl.createDiv({
+			cls: 'vim-reading-nav-preview-status',
+			text: 'Loading preview…',
+		});
 		return shellEl;
 	}
 
@@ -163,11 +158,11 @@ export class PersistentLinkPreview {
 			statusEl.textContent = message;
 			return;
 		}
-		const newStatusEl = shellEl.ownerDocument.createElement('div');
-		newStatusEl.className = 'vim-reading-nav-preview-status';
-		newStatusEl.textContent = message;
+		const newStatusEl = shellEl.createDiv({
+			cls: 'vim-reading-nav-preview-status',
+			text: message,
+		});
 		this.bodyEl?.replaceWith(newStatusEl);
-		shellEl.append(newStatusEl);
 	}
 
 	private position(shellEl: HTMLElement, targetEl: HTMLElement): void {
