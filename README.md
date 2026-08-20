@@ -18,11 +18,12 @@ Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without
 
 ## Key mappings
 
+### Built-in bare mappings
+
 | Context | Key | Action |
 | --- | --- | --- |
 | Reading mode | `j` / `k` | Scroll down / up |
-| Reading mode | `d` / `Ctrl+D` | Scroll down half a page |
-| Reading mode | `u` / `Ctrl+U` | Scroll up half a page |
+| Reading mode | `d` / `u` | Scroll down / up half a page |
 | Reading mode | `gg` / `G` | Scroll to the top / bottom |
 | Reading mode | `f` | Show hints for visible links |
 | Hint mode | Hint characters | Select a link |
@@ -30,7 +31,22 @@ Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without
 | Focused internal link | `Enter` | Follow the link and close the preview |
 | Hint or preview mode | `Esc` | Cancel and close |
 
-Key mappings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
+### Configurable page-scroll bindings
+
+| Key | Action |
+| --- | --- |
+| `Ctrl+D` (default) | Scroll down half a page |
+| `Ctrl+U` (default) | Scroll up half a page |
+| Not set (suggested `Ctrl+F`) | Scroll down one Vim-style page |
+| Not set (suggested `Ctrl+B`) | Scroll up one Vim-style page |
+
+Configure page-scroll bindings under **Settings → Vim Reading Navigation**. The defaults are `Ctrl+D` for half-page down and `Ctrl+U` for half-page up. Full-page down and up are unassigned until you choose bindings.
+
+> These bindings work only in Reading mode and are configured here rather than Obsidian Hotkeys, so editor Vim keys remain available and `Ctrl+F` search is not overridden by default on Windows and Linux.
+
+Half-page bindings move exactly half the viewport. Full-page bindings move one Vim-style page while preserving reading context. On Windows and Linux, assigning `Ctrl+F` replaces **Search current file** while a note is in Reading mode.
+
+Built-in bare mappings and configurable page-scroll bindings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
 
 ## Link previews
 
@@ -55,7 +71,7 @@ Current limitations:
 ## Usage
 
 1. Open a Markdown note in **Reading mode**.
-2. Use the mappings above; press `f` to select links.
+2. Use the built-in mappings above, configure page-scroll bindings in **Settings → Vim Reading Navigation**, or press `f` to select links.
 
 ## Installation
 
@@ -116,7 +132,8 @@ Re-copy `main.js` into the vault and reload Obsidian after each change, or point
 
 A fork of [**obsidian-vim-scrolling**](https://github.com/xlongfeng/obsidian-vim-scrolling) by [xlongfeng](https://github.com/xlongfeng). The original provides the reading-mode scrolling and cursor-adjustment behaviour; this fork adds:
 
-- Plain `d` / `u` for half-page scrolling (alongside `Ctrl+D` / `Ctrl+U`)
+- Plain `d` / `u` half-page scrolling
+- Configurable Reading-mode page-scroll bindings
 - An `f` Vimium-style link hint mode with persistent previews and link activation
 - Pop-out window support
 

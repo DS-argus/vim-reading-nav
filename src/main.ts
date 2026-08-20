@@ -1,16 +1,22 @@
 import { Plugin } from 'obsidian';
-import { ReadingModeScrollHandler } from './scrollHandler';
 import { CursorManager } from './cursorManager';
 import { LinkHintHandler } from './linkHintHandler';
+import { ReadingModeScrollHandler } from './scrollHandler';
+import { DEFAULT_SETTINGS, VimReadingNavSettingTab } from './settings';
+import type { VimReadingNavSettings } from './settings';
 
 export default class VimReadingNavPlugin extends Plugin {
+	settings: VimReadingNavSettings = { ...DEFAULT_SETTINGS };
 	private linkHints: LinkHintHandler | null = null;
 	private scrollHandler: ReadingModeScrollHandler | null = null;
 
-	onload() {
+	async onload(): Promise<void> {
+		await this.loadSettings();
+		this.addSettingTab(new VimReadingNavSettingTab(this));
+
 		this.linkHints = new LinkHintHandler(this);
 		this.linkHints.register();
-		this.scrollHandler = new ReadingModeScrollHandler(this);
+		this.scrollHandler = new ReadingModeScrollHandler(this, this.settings);
 		new CursorManager(this).register();
 
 		// Attach DOM listeners to the main window, every pop-out window that
@@ -27,7 +33,19 @@ export default class VimReadingNavPlugin extends Plugin {
 		);
 	}
 
-	onunload() {
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData() as Partial<VimReadingNavSettings>,
+		);
+	}
+
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
+	}
+
+	onunload(): void {
 		// registerDomEvent removes listeners automatically, but hint overlays
 		// live on a document body and must be torn down explicitly.
 		this.linkHints?.cleanup();
