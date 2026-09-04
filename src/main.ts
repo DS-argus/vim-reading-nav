@@ -1,6 +1,7 @@
 import { Plugin } from 'obsidian';
 import { CursorManager } from './cursorManager';
 import { LinkHintHandler } from './linkHintHandler';
+import { ReadingModeSearchHandler } from './searchHandler';
 import { ReadingModeScrollHandler } from './scrollHandler';
 import { DEFAULT_SETTINGS, VimReadingNavSettingTab } from './settings';
 import type { VimReadingNavSettings } from './settings';
@@ -9,6 +10,7 @@ export default class VimReadingNavPlugin extends Plugin {
 	settings: VimReadingNavSettings = { ...DEFAULT_SETTINGS };
 	private linkHints: LinkHintHandler | null = null;
 	private scrollHandler: ReadingModeScrollHandler | null = null;
+	private searchHandler: ReadingModeSearchHandler | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -19,6 +21,7 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.scrollHandler = new ReadingModeScrollHandler(this, this.settings);
 		new CursorManager(this).register();
 
+		this.searchHandler = new ReadingModeSearchHandler(this);
 		// Attach DOM listeners to the main window, every pop-out window that
 		// is already open (plugin enabled mid-session), and every pop-out
 		// opened later.
@@ -57,5 +60,6 @@ export default class VimReadingNavPlugin extends Plugin {
 		// is active (otherwise hint chars like 'j'/'k' would also scroll).
 		this.linkHints?.registerTo(doc);
 		this.scrollHandler?.registerTo(doc);
+		this.searchHandler?.registerTo(doc);
 	}
 }
