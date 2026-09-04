@@ -1,11 +1,11 @@
 # Vim Reading Navigation
 
-Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without leaving the keyboard.
+Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode** without leaving the keyboard.
 
 > [!NOTE]
 > Obsidian's **Vim key bindings** setting is not required.
 
-> A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, an `f` link hint mode, persistent link previews, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
+> A fork of [xlongfeng/obsidian-vim-scrolling](https://github.com/xlongfeng/obsidian-vim-scrolling) that adds plain `d`/`u` half-page scrolling, `/` native search, an `f` link hint mode, persistent link previews, and pop-out window support. Published with the original author's approval — see [Credits](#credits).
 
 ## Features
 
@@ -14,6 +14,7 @@ Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without
 - Persistent, mouse-independent Markdown previews for internal links
 - Immediate system-browser opening for external links
 - Cursor correction when switching from Reading mode back to the editor
+- Native in-document search from Reading mode with `/`
 - Main-window and pop-out-window support
 
 ## Key mappings
@@ -26,6 +27,8 @@ Navigate, scroll, preview, and open links in Obsidian's **Reading mode** without
 | Reading mode | `d` / `u` | Scroll down / up half a page |
 | Reading mode | `gg` / `G` | Scroll to the top / bottom |
 | Reading mode | `f` | Show hints for visible links |
+| Reading mode | `/` | Open Obsidian's native in-document search |
+| Native search | `Enter` / `Shift+Enter` | Select the next / previous result |
 | Hint mode | Hint characters | Select a link |
 | Internal-link preview | `Shift+J` / `Shift+K` | Scroll the preview down / up |
 | Focused internal link | `Enter` | Follow the link and close the preview |
@@ -47,6 +50,8 @@ Configure page-scroll bindings under **Settings → Vim Reading Navigation**. Th
 Half-page bindings move exactly half the viewport. Full-page bindings move one Vim-style page while preserving reading context. On Windows and Linux, assigning `Ctrl+F` replaces **Search current file** while a note is in Reading mode.
 
 Built-in bare mappings and configurable page-scroll bindings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
+
+Press `/` in Reading mode to open Obsidian's native in-document search. Search remains live while typing; use `Enter` and `Shift+Enter` for the next and previous result. `n` and `N` are intentionally not remapped while the native search field has focus.
 
 ## Link previews
 
@@ -136,6 +141,7 @@ A fork of [**obsidian-vim-scrolling**](https://github.com/xlongfeng/obsidian-vim
 - Configurable Reading-mode page-scroll bindings
 - An `f` Vimium-style link hint mode with persistent previews and link activation
 - Pop-out window support
+- `/` shortcut for Obsidian's native in-document search
 
 Published to the community plugin directory with the original author's [explicit approval](https://github.com/xlongfeng/obsidian-vim-scrolling/issues/2#issuecomment-5088284571), per Obsidian's [fork policy](https://docs.obsidian.md/Developer+policies#Forks).
 
