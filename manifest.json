@@ -1,9 +1,9 @@
 {
 	"id": "vim-reading-nav",
 	"name": "Vim Reading Navigation",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"minAppVersion": "1.1.0",
-	"description": "Adds keyboard navigation, link hints, and persistent link previews to Reading mode.",
+	"description": "Adds keyboard navigation, native search, link hints, and persistent link previews to Reading mode.",
 	"author": "argus",
 	"authorUrl": "https://github.com/DS-argus",
 	"isDesktopOnly": false
