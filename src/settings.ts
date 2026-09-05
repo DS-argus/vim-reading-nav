@@ -14,6 +14,7 @@ export interface VimReadingNavSettings {
 	halfPageUp: KeyBinding | null;
 	fullPageDown: KeyBinding | null;
 	fullPageUp: KeyBinding | null;
+	openExternalLinksImmediately: boolean;
 }
 
 export const DEFAULT_SETTINGS: VimReadingNavSettings = {
@@ -21,9 +22,10 @@ export const DEFAULT_SETTINGS: VimReadingNavSettings = {
 	halfPageUp: { key: 'u', ctrl: true, meta: false, alt: false, shift: false },
 	fullPageDown: null,
 	fullPageUp: null,
+	openExternalLinksImmediately: false,
 };
 
-type BindingSetting = keyof VimReadingNavSettings;
+type BindingSetting = 'halfPageDown' | 'halfPageUp' | 'fullPageDown' | 'fullPageUp';
 
 interface BindingDefinition {
 	setting: BindingSetting;
@@ -94,9 +96,17 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 		this.stopRecording();
 		this.containerEl.empty();
 		this.containerEl.createEl('p', {
-			text: 'These bindings apply only to Markdown notes in reading mode.',
+			text: 'These settings apply only to Markdown notes in reading mode.',
 		});
-
+		new Setting(this.containerEl)
+			.setName('Open external links immediately')
+			.setDesc('Skip destination confirmation for external links selected through hint mode.')
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.openExternalLinksImmediately)
+				.onChange(async (value) => {
+					this.plugin.settings.openExternalLinksImmediately = value;
+					await this.plugin.saveSettings();
+				}));
 		for (const definition of BINDINGS) this.displayBinding(definition);
 	}
 

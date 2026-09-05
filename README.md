@@ -11,8 +11,8 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 
 - Vim-style instant scrolling in Reading mode, including key repeat
 - Vimium-style `f` hints for visible links
-- Persistent, mouse-independent Markdown previews for internal links
-- Immediate system-browser opening for external links
+- Persistent, mouse-independent Markdown previews for internal links and standard or inline footnotes
+- Local external-link destination confirmation before opening in the system browser
 - Cursor correction when switching from Reading mode back to the editor
 - Native in-document search from Reading mode with `/`
 - Main-window and pop-out-window support
@@ -30,8 +30,11 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 | Reading mode | `/` | Open Obsidian's native in-document search |
 | Native search | `Enter` / `Shift+Enter` | Select the next / previous result |
 | Hint mode | Hint characters | Select a link |
-| Internal-link preview | `Shift+J` / `Shift+K` | Scroll the preview down / up |
+| Focused preview | `Shift+J` / `Shift+K` | Scroll the preview down / up |
+| Focused standard footnote | `Enter` | Jump to its definition and close the preview |
+| Focused inline footnote | `Enter` | Keep the preview open; do not navigate |
 | Focused internal link | `Enter` | Follow the link and close the preview |
+| Focused external link | `Enter` | Open the confirmed destination in the system browser |
 | Hint or preview mode | `Esc` | Cancel and close |
 
 ### Configurable page-scroll bindings
@@ -55,7 +58,11 @@ Press `/` in Reading mode to open Obsidian's native in-document search. Search r
 
 ## Link previews
 
-Selecting an internal link centers and highlights it, then opens a read-only preview that stays visible regardless of mouse movement. A plain note link renders the full note; heading and block links render only the resolved section or block.
+External links selected through hint mode display a local confirmation preview containing only the full normalized HTTP(S) URL; the page is not fetched. Press `Enter` to open the confirmed destination in the system browser, or `Escape` to cancel.
+
+**Open external links immediately** under **Settings → Vim Reading Navigation** is off by default. Enable it to skip external destination confirmation for links selected through hint mode.
+
+Selecting an internal link centers and highlights it, then opens a read-only preview that stays visible regardless of mouse movement. A plain note link renders the full note; heading and block links render only the resolved section or block. Standard and inline footnotes open compact body-only cards without generated numbering.
 
 Supported preview targets:
 
@@ -64,6 +71,8 @@ Supported preview targets:
 - Block links: `[[Note#^block-id]]` and same-note block links
 - Relative Markdown links to Markdown notes
 - Internal links in paragraphs, lists, tables, and callouts
+- Standard footnotes, including named, multiline, and repeated references
+- Inline footnotes
 
 Current limitations:
 
@@ -71,7 +80,7 @@ Current limitations:
 - Links inside embedded or transcluded notes are excluded to prevent incorrect relative-path resolution.
 - Non-Markdown files can be focused and opened with `Enter`, but are not previewed.
 - Unresolved links show an error state.
-- Standard footnotes (`[^id]`), tags (`#tag`), and `obsidian://` URIs are not hint targets.
+- Tags (`#tag`) and `obsidian://` URIs are not hint targets.
 
 ## Usage
 
@@ -142,6 +151,8 @@ A fork of [**obsidian-vim-scrolling**](https://github.com/xlongfeng/obsidian-vim
 - An `f` Vimium-style link hint mode with persistent previews and link activation
 - Pop-out window support
 - `/` shortcut for Obsidian's native in-document search
+- Footnote previews
+- External destination confirmation
 
 Published to the community plugin directory with the original author's [explicit approval](https://github.com/xlongfeng/obsidian-vim-scrolling/issues/2#issuecomment-5088284571), per Obsidian's [fork policy](https://docs.obsidian.md/Developer+policies#Forks).
 

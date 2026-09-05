@@ -43,6 +43,39 @@
 	overflow: hidden;
 }
 
+/* Headerless footnote and external destination previews. */
+.vim-reading-nav-preview-compact {
+	width: fit-content;
+	max-width: min(36rem, calc(100vw - 24px));
+	max-height: min(65vh, 38rem);
+}
+
+.vim-reading-nav-preview-compact .vim-reading-nav-preview-status {
+	padding: var(--size-4-3) var(--size-4-4);
+}
+
+.vim-reading-nav-preview-compact .vim-reading-nav-preview-body {
+	padding: var(--size-4-3) var(--size-4-4);
+}
+
+.vim-reading-nav-preview-compact .markdown-rendered > :first-child {
+	margin-top: 0;
+}
+
+.vim-reading-nav-preview-compact .markdown-rendered > :last-child {
+	margin-bottom: 0;
+}
+
+.vim-reading-nav-external-preview {
+	font-size: var(--font-ui-medium);
+}
+
+.vim-reading-nav-external-url {
+	max-width: min(36rem, calc(100vw - 48px));
+	overflow-wrap: anywhere;
+	user-select: text;
+}
+
 .vim-reading-nav-preview-header {
 	flex: 0 0 auto;
 	padding: var(--size-4-2) var(--size-4-3);
