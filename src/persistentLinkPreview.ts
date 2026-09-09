@@ -8,6 +8,7 @@ import {
 } from 'obsidian';
 
 import { footnoteDefinitionBodyMarkdown } from './footnoteResolver';
+import type { PreviewGuidance } from './previewGuidance';
 const SCROLL_STEP = 120;
 
 /** Renders and owns the lifetime of one persistent Reading-mode preview. */
@@ -19,11 +20,40 @@ export class PersistentLinkPreview {
 	private renderComponent: Component | null = null;
 	private bodyEl: HTMLElement | null = null;
 	private targetEl: HTMLElement | null = null;
+	private footerEl: HTMLElement | null = null;
+	private guidance: PreviewGuidance = { items: [] };
 
 	constructor(app: App) {
 		this.app = app;
 	}
 
+	setGuidance(guidance: PreviewGuidance): void {
+		this.guidance = guidance;
+		this.renderGuidance();
+		this.reposition();
+	}
+
+	showOpenError(message: string): void {
+		if (!this.shellEl) return;
+		this.showStatus(this.shellEl, message);
+		this.reposition();
+	}
+
+	private renderGuidance(): void {
+		if (!this.footerEl) return;
+		this.footerEl.empty();
+		for (const item of this.guidance.items) {
+			const el = this.footerEl.createSpan({ cls: 'vim-reading-nav-preview-action' });
+			el.createEl('kbd', {
+				text: item.key,
+				cls: item.emphasized ? 'vim-reading-nav-preview-key-active' : '',
+			});
+			el.createSpan({ text: item.description });
+		}
+		if (this.guidance.note) {
+			this.footerEl.createSpan({ cls: 'vim-reading-nav-preview-note', text: this.guidance.note });
+		}
+	}
 	isOpen(): boolean {
 		return this.shellEl !== null;
 	}
@@ -97,6 +127,7 @@ export class PersistentLinkPreview {
 		this.targetEl = null;
 		this.shellEl?.remove();
 		this.shellEl = null;
+		this.footerEl = null;
 	}
 
 	private start(title: string, targetEl: HTMLElement): { shellEl: HTMLElement; generation: number } {
@@ -183,19 +214,24 @@ export class PersistentLinkPreview {
 			headerEl.createSpan({ cls: 'vim-reading-nav-preview-title', text: title });
 		}
 		shellEl.createDiv({ cls: 'vim-reading-nav-preview-status', text: 'Loading preview…' });
+		this.footerEl = shellEl.createEl('footer', { cls: 'vim-reading-nav-preview-footer' });
+		this.renderGuidance();
 		return shellEl;
 	}
 
 	private replaceStatus(shellEl: HTMLElement, bodyEl: HTMLElement): void {
 		const statusEl = shellEl.querySelector<HTMLElement>('.vim-reading-nav-preview-status');
 		if (statusEl) statusEl.replaceWith(bodyEl);
-		else shellEl.append(bodyEl);
+		else shellEl.insertBefore(bodyEl, this.footerEl);
 	}
 
 	private showStatus(shellEl: HTMLElement, message: string): void {
 		const statusEl = shellEl.querySelector<HTMLElement>('.vim-reading-nav-preview-status');
 		if (statusEl) statusEl.textContent = message;
-		else shellEl.createDiv({ cls: 'vim-reading-nav-preview-status', text: message });
+		else {
+			const status = shellEl.createDiv({ cls: 'vim-reading-nav-preview-status', text: message });
+			shellEl.insertBefore(status, this.footerEl);
+		}
 	}
 
 	private position(shellEl: HTMLElement, targetEl: HTMLElement): void {
