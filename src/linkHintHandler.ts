@@ -2,6 +2,7 @@ import { MarkdownView } from 'obsidian';
 import type VimReadingNavPlugin from './main';
 import { FootnoteResolver } from './footnoteResolver';
 import { LinkPreviewSession, parseHttpUrl } from './linkPreviewSession';
+import { bindingMatchesEvent } from './settings';
 import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
@@ -34,7 +35,9 @@ export class LinkHintHandler {
 		this.footnotes.register(this.plugin);
 		this.plugin.registerEvent(this.plugin.app.workspace.on('active-leaf-change', (leaf) => {
 			const doc = leaf?.view.containerEl.ownerDocument;
-			if (doc) this.resetDocument(doc);
+			if (!doc) return;
+			const state = this.stateFor(doc);
+			if (!state.session.isOpeningSplit()) this.resetState(state);
 		}));
 		this.plugin.registerEvent(this.plugin.app.workspace.on('layout-change', () => this.reapInvalidStates()));
 		this.plugin.registerEvent(this.plugin.app.workspace.on('window-close', (win) => this.disposeDocument(win.doc)));
@@ -49,6 +52,9 @@ export class LinkHintHandler {
 	registerTo(doc: Document): void {
 		this.stateFor(doc);
 		this.plugin.registerDomEvent(doc, 'keydown', (evt: KeyboardEvent) => this.handleKeyDown(evt, doc));
+		this.plugin.registerDomEvent(doc, 'keydown', (evt: KeyboardEvent) => {
+			this.cancelPendingForConfiguredScroll(evt, doc);
+		}, true);
 		this.plugin.registerDomEvent(doc, 'scroll', () => {
 			const state = this.stateFor(doc);
 			if (state.active) this.exitHintMode(state);
@@ -61,6 +67,9 @@ export class LinkHintHandler {
 		});
 	}
 
+	settingsChanged(): void {
+		for (const state of this.states.values()) this.resetState(state);
+	}
 	cleanup(): void {
 		for (const state of this.states.values()) this.disposeState(state);
 		this.states.clear();
@@ -78,6 +87,16 @@ export class LinkHintHandler {
 		if (!view || evt.ctrlKey || evt.metaKey || evt.altKey || evt.key !== 'f') return;
 		this.consume(evt);
 		this.enterHintMode(view, doc, state);
+	}
+
+	private cancelPendingForConfiguredScroll(evt: KeyboardEvent, doc: Document): void {
+		if (isFocusInModal(evt, doc) || !getPreviewViewIn(this.plugin.app, doc)) return;
+		const settings = this.plugin.settings;
+		if (!bindingMatchesEvent(settings.halfPageDown, evt)
+			&& !bindingMatchesEvent(settings.halfPageUp, evt)
+			&& !bindingMatchesEvent(settings.fullPageDown, evt)
+			&& !bindingMatchesEvent(settings.fullPageUp, evt)) return;
+		this.stateFor(doc).session.cancelPendingDirection();
 	}
 
 	private enterHintMode(view: MarkdownView, doc: Document, state: DocumentState): void {
@@ -140,11 +159,6 @@ export class LinkHintHandler {
 
 	private updateHintDisplay(state: DocumentState): void {
 		state.hints.forEach((hint) => hint.el.toggleClass('vim-reading-nav-hint-inactive', !hint.label.startsWith(state.typed)));
-	}
-
-	private resetDocument(doc: Document): void {
-		const state = this.states.get(doc);
-		if (state) this.resetState(state);
 	}
 
 	private disposeDocument(doc: Document): void {

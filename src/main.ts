@@ -45,6 +45,7 @@ export default class VimReadingNavPlugin extends Plugin {
 	}
 
 	async saveSettings(): Promise<void> {
+		this.linkHints?.settingsChanged();
 		await this.saveData(this.settings);
 	}
 

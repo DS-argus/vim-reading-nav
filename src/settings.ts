@@ -15,6 +15,8 @@ export interface VimReadingNavSettings {
 	fullPageDown: KeyBinding | null;
 	fullPageUp: KeyBinding | null;
 	openExternalLinksImmediately: boolean;
+	enableSplitOpening: boolean;
+	showPreviewOpeningGuidance: boolean;
 }
 
 export const DEFAULT_SETTINGS: VimReadingNavSettings = {
@@ -23,6 +25,8 @@ export const DEFAULT_SETTINGS: VimReadingNavSettings = {
 	fullPageDown: null,
 	fullPageUp: null,
 	openExternalLinksImmediately: false,
+	enableSplitOpening: true,
+	showPreviewOpeningGuidance: true,
 };
 
 type BindingSetting = 'halfPageDown' | 'halfPageUp' | 'fullPageDown' | 'fullPageUp';
@@ -105,6 +109,27 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.openExternalLinksImmediately)
 				.onChange(async (value) => {
 					this.plugin.settings.openExternalLinksImmediately = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(this.containerEl)
+			.setName('Enable split opening')
+			.setDesc('Enable directional shortcuts for opening Markdown links in split panes.')
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.enableSplitOpening)
+				.onChange(async (value) => {
+					this.plugin.settings.enableSplitOpening = value;
+					await this.plugin.saveSettings();
+					this.display();
+				}));
+		new Setting(this.containerEl)
+			.setName('Show preview opening guidance')
+			.setDesc('Show compact opening shortcuts below the preview. Requires split opening.')
+			.setDisabled(!this.plugin.settings.enableSplitOpening)
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.showPreviewOpeningGuidance)
+				.setDisabled(!this.plugin.settings.enableSplitOpening)
+				.onChange(async (value) => {
+					this.plugin.settings.showPreviewOpeningGuidance = value;
 					await this.plugin.saveSettings();
 				}));
 		for (const definition of BINDINGS) this.displayBinding(definition);

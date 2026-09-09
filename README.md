@@ -21,36 +21,33 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 
 ### Built-in bare mappings
 
-| Context | Key | Action |
-| --- | --- | --- |
-| Reading mode | `j` / `k` | Scroll down / up |
-| Reading mode | `d` / `u` | Scroll down / up half a page |
-| Reading mode | `gg` / `G` | Scroll to the top / bottom |
-| Reading mode | `f` | Show hints for visible links |
-| Reading mode | `/` | Open Obsidian's native in-document search |
-| Native search | `Enter` / `Shift+Enter` | Select the next / previous result |
-| Hint mode | Hint characters | Select a link |
-| Focused preview | `Shift+J` / `Shift+K` | Scroll the preview down / up |
-| Focused standard footnote | `Enter` | Jump to its definition and close the preview |
-| Focused inline footnote | `Enter` | Keep the preview open; do not navigate |
-| Focused internal link | `Enter` | Follow the link and close the preview |
-| Focused external link | `Enter` | Open the confirmed destination in the system browser |
-| Hint or preview mode | `Esc` | Cancel and close |
+| Context                   | Key                   | Action                                               |
+| ------------------------- | --------------------- | ---------------------------------------------------- |
+| Reading mode              | `j` / `k`             | Scroll down / up                                     |
+| Reading mode              | `d` / `u`             | Scroll down / up half a page                         |
+| Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
+| Reading mode              | `f`                   | Show hints for visible links                         |
+| Reading mode              | `/`                   | Open Obsidian's native in-document search            |
+| Hint mode                 | Hint characters       | Select a link                                        |
+| Focused preview           | `Shift+J` / `Shift+K` | Scroll the preview down / up                         |
+| Focused standard footnote | `Enter`               | Jump to its definition and close the preview         |
+| Focused inline footnote   | `Enter`               | Keep the preview open; do not navigate               |
+| Focused internal link     | `Enter`               | Follow the link and close the preview                |
+| Focused external link     | `Enter`               | Open the confirmed destination in the system browser |
+| Hint or preview mode      | `Esc`                 | Cancel and close                                     |
 
 ### Configurable page-scroll bindings
 
-| Key | Action |
-| --- | --- |
-| `Ctrl+D` (default) | Scroll down half a page |
-| `Ctrl+U` (default) | Scroll up half a page |
+| Key                          | Action                         |
+| ---------------------------- | ------------------------------ |
+| `Ctrl+D` (default)           | Scroll down half a page        |
+| `Ctrl+U` (default)           | Scroll up half a page          |
 | Not set (suggested `Ctrl+F`) | Scroll down one Vim-style page |
-| Not set (suggested `Ctrl+B`) | Scroll up one Vim-style page |
+| Not set (suggested `Ctrl+B`) | Scroll up one Vim-style page   |
 
-Configure page-scroll bindings under **Settings → Vim Reading Navigation**. The defaults are `Ctrl+D` for half-page down and `Ctrl+U` for half-page up. Full-page down and up are unassigned until you choose bindings.
+Configure these Reading-mode bindings under **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Editor bindings are unaffected.
 
-> These bindings work only in Reading mode and are configured here rather than Obsidian Hotkeys, so editor Vim keys remain available and `Ctrl+F` search is not overridden by default on Windows and Linux.
-
-Half-page bindings move exactly half the viewport. Full-page bindings move one Vim-style page while preserving reading context. On Windows and Linux, assigning `Ctrl+F` replaces **Search current file** while a note is in Reading mode.
+> On Windows and Linux, assigning `Ctrl+F` overrides in-note search in Reading mode.
 
 Built-in bare mappings and configurable page-scroll bindings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
 
@@ -58,29 +55,29 @@ Press `/` in Reading mode to open Obsidian's native in-document search. Search r
 
 ## Link previews
 
-External links selected through hint mode display a local confirmation preview containing only the full normalized HTTP(S) URL; the page is not fetched. Press `Enter` to open the confirmed destination in the system browser, or `Escape` to cancel.
+Press `f`, then type the label beside a link to preview it. Notes, headings, blocks, and footnotes are supported. External links show their destination URL without fetching the page.
 
-**Open external links immediately** under **Settings → Vim Reading Navigation** is off by default. Enable it to skip external destination confirmation for links selected through hint mode.
+| Key after selecting a link | Action                                                                  |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `Enter`                    | Open the link; jump to a standard footnote (inline footnotes stay open) |
+| `Shift+J` / `Shift+K`      | Scroll the preview; lowercase `j/k` scroll the note                     |
+| `Esc`                      | Close the preview                                                       |
 
-Selecting an internal link centers and highlights it, then opens a read-only preview that stays visible regardless of mouse movement. A plain note link renders the full note; heading and block links render only the resolved section or block. Standard and inline footnotes open compact body-only cards without generated numbering.
+### Split opening (optional)
 
-Supported preview targets:
+**Enable split opening** under **Settings → Vim Reading Navigation** is on by default. Select a Markdown link, then:
 
-- Note, path, and alias links: `[[Note]]`, `[[Folder/Note]]`, `[[Note|Display text]]`
-- Heading links: `[[Note#Heading]]`, `[[#Same-note heading]]`
-- Block links: `[[Note#^block-id]]` and same-note block links
-- Relative Markdown links to Markdown notes
-- Internal links in paragraphs, lists, tables, and callouts
-- Standard footnotes, including named, multiline, and repeated references
-- Inline footnotes
+| Direction | Open beside the note | Always create a new split |
+| --------- | -------------------- | ------------------------- |
+| Right     | `v`, then `Enter`    | `V`, then `Enter`         |
+| Below     | `h`, then `Enter`    | `H`, then `Enter`         |
 
-Current limitations:
+Lowercase reuses an adjacent pane whose shared edge matches the source, adding a new tab; otherwise it creates a split. The destination opens in Reading mode, including heading/block links. Confirm within **3 seconds**; after that, `Enter` opens in the current tab.
 
-- Links and controls inside the preview are intentionally non-interactive.
-- Links inside embedded or transcluded notes are excluded to prevent incorrect relative-path resolution.
-- Non-Markdown files can be focused and opened with `Enter`, but are not previewed.
-- Unresolved links show an error state.
-- Tags (`#tag`) and `obsidian://` URIs are not hint targets.
+- **Show preview opening guidance:** on by default; disabled and hidden while split opening is off.
+- **Open external links immediately:** off by default; enable to skip URL confirmation.
+
+Non-Markdown files open normally but have no preview or split shortcut. Links inside embedded notes, tags, and `obsidian://` links are excluded. Preview content is display-only.
 
 ## Usage
 
