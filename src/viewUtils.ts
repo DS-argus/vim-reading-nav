@@ -27,17 +27,13 @@ export function getScrollElement(view: MarkdownView): HTMLElement | null {
  * input-like element, a modal/prompt/suggestion is open, or the target is
  * not a plain HTML element.
  *
- * The instanceof check is performed against the document's own window so it
- * stays correct across realms (each pop-out window has its own HTMLElement
- * constructor; `target instanceof HTMLElement` with the main-window
- * constructor would be false for pop-out elements).
+ * Pop-out documents can contain nodes created in another window. Use
+ * Obsidian's cross-window check rather than the owning window's constructor.
  */
 export function isFocusInModal(evt: KeyboardEvent, doc: Document): boolean {
-	const win = doc.defaultView;
-	const target = evt.target;
-	// Unknown or non-HTML targets (Document, SVG, cross-realm oddities):
-	// yield rather than intercept.
-	if (!win || !(target instanceof win.HTMLElement)) return true;
+	const target = evt.targetNode;
+	// Yield for missing windows and non-HTML targets (including Document/SVG).
+	if (!doc.defaultView || !target?.instanceOf(HTMLElement)) return true;
 	// Yield to any focused input-like element
 	if (
 		target.tagName === 'INPUT' ||
