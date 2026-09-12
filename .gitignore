@@ -23,3 +23,9 @@ data.json
 
 # GJC agent runtime state
 .gjc/
+
+# Local development notes and archives
+/docs/
+
+# Local Git worktrees
+/.worktrees/
