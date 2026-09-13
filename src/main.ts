@@ -3,7 +3,8 @@ import { CursorManager } from './cursorManager';
 import { LinkHintHandler } from './linkHintHandler';
 import { ReadingModeSearchHandler } from './searchHandler';
 import { ReadingModeScrollHandler } from './scrollHandler';
-import { DEFAULT_SETTINGS, VimReadingNavSettingTab } from './settings';
+import { ReadingFocus } from './readingFocus';
+import { DEFAULT_SETTINGS, normalizeReadingFocusSettings, VimReadingNavSettingTab } from './settings';
 import type { VimReadingNavSettings } from './settings';
 
 export default class VimReadingNavPlugin extends Plugin {
@@ -11,10 +12,20 @@ export default class VimReadingNavPlugin extends Plugin {
 	private linkHints: LinkHintHandler | null = null;
 	private scrollHandler: ReadingModeScrollHandler | null = null;
 	private searchHandler: ReadingModeSearchHandler | null = null;
+	private readingFocus: ReadingFocus | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new VimReadingNavSettingTab(this));
+
+		const readingFocus = new ReadingFocus(this, this.settings);
+		readingFocus.register();
+		this.readingFocus = readingFocus;
+		this.addCommand({
+			id: 'toggle-reading-focus',
+			name: 'Toggle reading focus',
+			callback: () => readingFocus.toggle(),
+		});
 
 		this.linkHints = new LinkHintHandler(this);
 		this.linkHints.register();
@@ -42,10 +53,13 @@ export default class VimReadingNavPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData() as Partial<VimReadingNavSettings>,
 		);
+		normalizeReadingFocusSettings(this.settings);
 	}
 
 	async saveSettings(): Promise<void> {
 		this.linkHints?.settingsChanged();
+		normalizeReadingFocusSettings(this.settings);
+		this.readingFocus?.settingsChanged();
 		await this.saveData(this.settings);
 	}
 
@@ -62,5 +76,6 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.linkHints?.registerTo(doc);
 		this.scrollHandler?.registerTo(doc);
 		this.searchHandler?.registerTo(doc);
+		this.readingFocus?.registerTo(doc);
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "vim-reading-nav",
-	"version": "1.6.1",
+	"version": "1.7.0",
 	"description": "Adds keyboard navigation, native search, link hints, and persistent link previews to Reading mode.",
 	"main": "main.js",
 	"type": "module",

@@ -165,3 +165,22 @@
 	line-height: 1.2;
 	color: var(--text-muted);
 }
+
+/* Reading focus touches only mounted top-level renderer blocks in one pane. */
+.markdown-preview-view {
+	--vim-reading-nav-focus-opacity: 0.5;
+}
+
+.markdown-preview-view > .markdown-preview-sizer > .vim-reading-nav-focus-dim {
+	opacity: var(--vim-reading-nav-focus-opacity);
+}
+
+.view-action.vim-reading-nav-focus-action[aria-pressed="true"] {
+	color: var(--text-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+.view-action.vim-reading-nav-focus-action:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
