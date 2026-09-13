@@ -1,4 +1,4 @@
-import { Component, Notice, Platform, PluginSettingTab, Setting } from 'obsidian';
+import { Component, Notice, Platform, PluginSettingTab, Setting, setIcon } from 'obsidian';
 import type VimReadingNavPlugin from './main';
 
 export interface KeyBinding {
@@ -16,6 +16,8 @@ export interface VimReadingNavSettings {
 	fullPageUp: KeyBinding | null;
 	openExternalLinksImmediately: boolean;
 	enableSplitOpening: boolean;
+	readingFocusOpacity: number;
+	readingFocusContextBlocks: number;
 	showPreviewOpeningGuidance: boolean;
 }
 
@@ -26,8 +28,21 @@ export const DEFAULT_SETTINGS: VimReadingNavSettings = {
 	fullPageUp: null,
 	openExternalLinksImmediately: false,
 	enableSplitOpening: true,
+	readingFocusOpacity: 50,
+	readingFocusContextBlocks: 2,
 	showPreviewOpeningGuidance: true,
 };
+
+export function normalizeReadingFocusSettings(settings: VimReadingNavSettings): void {
+	const opacity = settings.readingFocusOpacity;
+	settings.readingFocusOpacity = typeof opacity === 'number' && Number.isFinite(opacity)
+		? Math.round(Math.min(100, Math.max(10, opacity)) / 5) * 5
+		: DEFAULT_SETTINGS.readingFocusOpacity;
+	const blocks = settings.readingFocusContextBlocks;
+	settings.readingFocusContextBlocks = typeof blocks === 'number' && Number.isFinite(blocks)
+		? Math.round(Math.min(5, Math.max(0, blocks)))
+		: DEFAULT_SETTINGS.readingFocusContextBlocks;
+}
 
 type BindingSetting = 'halfPageDown' | 'halfPageUp' | 'fullPageDown' | 'fullPageUp';
 
@@ -99,9 +114,43 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 	display(): void {
 		this.stopRecording();
 		this.containerEl.empty();
-		this.containerEl.createEl('p', {
+		const callout = this.containerEl.createDiv({
+			cls: 'callout',
+			attr: { 'data-callout': 'note' },
+		});
+		const title = callout.createDiv({ cls: 'callout-title' });
+		setIcon(title.createDiv({ cls: 'callout-icon' }), 'info');
+		title.createDiv({ cls: 'callout-title-inner', text: 'Reading mode only' });
+		callout.createDiv({ cls: 'callout-content' }).createEl('p', {
 			text: 'These settings apply only to Markdown notes in reading mode.',
 		});
+		new Setting(this.containerEl).setName('Scrolling').setHeading();
+		for (const definition of BINDINGS) this.displayBinding(definition);
+		new Setting(this.containerEl)
+			.setName('Reading focus')
+			.setDesc('Press z to toggle. By default, the center and two blocks on each side stay bright, up to five blocks total.')
+			.setHeading();
+		new Setting(this.containerEl)
+			.setName('Surrounding text opacity')
+			.setDesc('Percent opacity outside the focused blocks. Higher values keep text clearer. Default: 50%.')
+			.addSlider((slider) => slider.setLimits(10, 100, 5)
+				.setValue(this.plugin.settings.readingFocusOpacity)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.readingFocusOpacity = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(this.containerEl)
+			.setName('Context blocks on each side')
+			.setDesc('Blocks kept bright before and after the center block. Default: 2 on each side, up to 5 blocks including the center.')
+			.addSlider((slider) => slider.setLimits(0, 5, 1)
+				.setValue(this.plugin.settings.readingFocusContextBlocks)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.readingFocusContextBlocks = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(this.containerEl).setName('Links and previews').setHeading();
 		new Setting(this.containerEl)
 			.setName('Open external links immediately')
 			.setDesc('Skip destination confirmation for external links selected through hint mode.')
@@ -132,7 +181,6 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 					this.plugin.settings.showPreviewOpeningGuidance = value;
 					await this.plugin.saveSettings();
 				}));
-		for (const definition of BINDINGS) this.displayBinding(definition);
 	}
 
 	hide(): void {

@@ -1,6 +1,6 @@
 # Vim Reading Navigation
 
-Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode** without leaving the keyboard.
+Navigate, search, scroll, preview, open links, and focus on what you read in Obsidian's **Reading mode** without leaving the keyboard.
 
 > [!NOTE]
 > Obsidian's **Vim key bindings** setting is not required.
@@ -16,6 +16,7 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 - Cursor correction when switching from Reading mode back to the editor
 - Native in-document search from Reading mode with `/`
 - Main-window and pop-out-window support
+- [Reading focus](#reading-focus) with `z` or a native pane-header toggle, adjustable opacity, and configurable context blocks
 
 ## Key mappings
 
@@ -28,6 +29,7 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 | Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
 | Reading mode              | `f`                   | Show hints for visible links                         |
 | Reading mode              | `/`                   | Open Obsidian's native in-document search            |
+| Reading mode              | `z`                   | Toggle reading focus                                 |
 | Hint mode                 | Hint characters       | Select a link                                        |
 | Focused preview           | `Shift+J` / `Shift+K` | Scroll the preview down / up                         |
 | Focused standard footnote | `Enter`               | Jump to its definition and close the preview         |
@@ -46,6 +48,8 @@ Navigate, search, scroll, preview, and open links in Obsidian's **Reading mode**
 | Not set (suggested `Ctrl+B`) | Scroll up one Vim-style page   |
 
 Configure these Reading-mode bindings under **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Editor bindings are unaffected.
+
+The settings page groups controls into **Scrolling**, **Reading focus**, and **Links and previews**. Existing saved preferences are retained when defaults change.
 
 > On Windows and Linux, assigning `Ctrl+F` overrides in-note search in Reading mode.
 
@@ -79,10 +83,45 @@ Lowercase reuses an adjacent pane whose shared edge matches the source, adding a
 
 Non-Markdown files open normally but have no preview or split shortcut. Links inside embedded notes, tags, and `obsidian://` links are excluded. Preview content is display-only.
 
+## Reading focus
+
+Keep the passage you are reading bright while dimming surrounding text, without hiding the workspace or changing your pane layout.
+
+### Toggle and status
+
+- Press `z` in Reading mode, click the **focus icon in the pane header**, or run **Vim Reading Navigation: Toggle reading focus** from the command palette.
+- The header icon is highlighted while enabled, and a brief Obsidian notice confirms each toggle. The icon supports keyboard activation with Enter or Space.
+- If your theme or settings hide the pane header, use `z` or the command; toggle notices still appear.
+- Holding `z` does not toggle repeatedly. Inputs, modals, editors, and active link-hint input are left alone. Additional command shortcuts can be assigned under **Settings → Hotkeys**.
+
+**Focus follows the active Reading pane.** Switching panes removes the effect from the previous pane and applies it to the newly active Reading pane. The enabled state is shared within the vault session, not stored independently for each pane. Other panes, link-hint overlays, and separate preview popups retain their appearance. Editing and non-Markdown views have no focus effect; returning to a Reading pane resumes it while enabled.
+
+### Focus range
+
+The block nearest the viewport center and its surrounding context stay bright. Near the start or end of a note, the focus anchor moves toward that edge so the first and last blocks remain reachable. Notes that fit without scrolling stay fully bright. Scroll, resize, image loading, and rerendering update the focused passage automatically.
+
+Configure **Settings → Vim Reading Navigation → Reading focus**:
+
+| Option | Default | Range |
+| --- | --- | --- |
+| Surrounding text opacity | **50%** | 10–100%, in steps of 5; higher values keep surrounding text clearer |
+| Context blocks on each side | **2** | 0–5 blocks before and after the selected block |
+
+The default highlights **up to 5 blocks**: the selected block plus 2 on each side. Set the context to 0 for only the selected block, or 5 for up to 11 blocks. At 100% opacity, surrounding text is not visibly dimmed, but focus remains enabled.
+
+Both options are saved and applied immediately. **Focus starts off after each plugin load**; its enabled state is not saved. Existing saved preferences are retained when defaults change.
+
+### Block boundaries and limitations
+
+Paragraphs, headings, lists, tables, code blocks, blockquotes, and similar top-level rendered blocks are supported. A long list, table, code block, or embed is treated as a single block, so a large block can keep most of the viewport bright. Nested elements are not dimmed again.
+
+Only mounted top-level `el-*` wrappers directly inside `.markdown-preview-sizer` are considered; unsupported renderer layouts are left unchanged, and offscreen content is not materialized. This is a reading-focus feature, not a Zen mode that hides workspace UI.
+
 ## Usage
 
 1. Open a Markdown note in **Reading mode**.
 2. Use the built-in mappings above, configure page-scroll bindings in **Settings → Vim Reading Navigation**, or press `f` to select links.
+3. Press `z` or click the focus icon in the pane header to enable reading focus. Adjust its opacity and context range under **Settings → Vim Reading Navigation → Reading focus**.
 
 ## Installation
 
