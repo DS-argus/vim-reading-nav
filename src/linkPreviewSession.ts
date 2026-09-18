@@ -52,7 +52,7 @@ export class LinkPreviewSession {
 	private pendingDirection: PendingDirection | null = null;
 	private pendingTimer: number | null = null;
 	private pendingDeadline = 0;
-	private splitOpening = false;
+	private splitOpening: Extract<FocusedTarget, { kind: 'internal' }> | null = null;
 
 	constructor(
 		private readonly plugin: VimReadingNavPlugin,
@@ -170,7 +170,7 @@ export class LinkPreviewSession {
 
 	/** Keep the focused preview alive while its own split open changes active leaf. */
 	isOpeningSplit(): boolean {
-		return this.splitOpening;
+		return this.splitOpening !== null;
 	}
 
 	cancelPendingDirection(): void {
@@ -257,7 +257,7 @@ export class LinkPreviewSession {
 
 	private async activateSplit(focused: Extract<FocusedTarget, { kind: 'internal' }>, pending: PendingDirection): Promise<void> {
 		if (!this.plugin.settings.enableSplitOpening || !focused.sourceLeaf || this.splitOpening) return;
-		this.splitOpening = true;
+		this.splitOpening = focused;
 		try {
 			const result = await this.navigator.open(
 				focused.linktext,
@@ -265,10 +265,10 @@ export class LinkPreviewSession {
 				focused.sourceLeaf,
 				pending.direction,
 				pending.newPane,
-				() => this.splitOpening && this.focusedTarget === focused && this.isValidFocusedTarget(),
+				() => this.splitOpening === focused && this.focusedTarget === focused && this.isValidFocusedTarget(),
 			);
 			if (result.opened) {
-				this.clear(true);
+				if (this.focusedTarget === focused) this.clear(true);
 				return;
 			}
 			if (!result.cancelled && this.focusedTarget === focused && this.isValidFocusedTarget()) {
@@ -280,7 +280,10 @@ export class LinkPreviewSession {
 				this.preview.showOpenError('Could not open the link in a split pane.');
 			}
 		} finally {
-			this.splitOpening = false;
+			if (this.splitOpening === focused) {
+				this.splitOpening = null;
+				this.reapInvalid();
+			}
 		}
 	}
 
@@ -315,7 +318,7 @@ export class LinkPreviewSession {
 
 	private clear(closePreview: boolean): void {
 		this.footnoteGeneration++;
-		this.splitOpening = false;
+		this.splitOpening = null;
 		this.clearPendingDirection(false);
 		this.focusedTarget?.link.removeClass('vim-reading-nav-link-focused');
 		this.focusedTarget = null;
@@ -388,6 +391,11 @@ export class LinkPreviewSession {
 
 	private isValidFocusedTarget(): boolean {
 		const focused = this.focusedTarget;
+		// Once confirmed, a split belongs to the source note, not its rendered anchor.
+		// Creating a narrower pane can replace that anchor during layout reflow.
+		if (focused?.kind === 'internal' && this.splitOpening === focused && focused.sourceLeaf) {
+			return this.navigator.isSourceContextValid(focused.sourceLeaf, this.doc, focused.sourcePath);
+		}
 		if (!focused || !this.isValidLink(focused.link)) return false;
 		return focused.kind !== 'internal'
 			|| focused.sourceLeaf === null
