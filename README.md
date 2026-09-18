@@ -69,7 +69,7 @@ Press `f`, then type the label beside a link to preview it. Notes, headings, blo
 
 ## Heading folds
 
-Press `Shift+F` in Reading mode, then type the label beside a visible heading to collapse or expand its section. A collapsed heading remains visible and shows a `▸` indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level. Fold state lasts only until Obsidian rerenders the note.
+Press `Shift+F` in Reading mode, then type the orange label beside a visible heading to collapse or expand its section using Obsidian's native heading folding. A collapsed heading remains visible with its fold indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level.
 
 ### Split opening (optional)
 

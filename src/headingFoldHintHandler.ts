@@ -5,8 +5,6 @@ import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils'
 const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
 const HINT_CLASS = 'vim-reading-nav-heading-hint';
 const HINT_INACTIVE_CLASS = 'vim-reading-nav-hint-inactive';
-const COLLAPSED_CLASS = 'vim-reading-nav-heading-collapsed';
-const HIDDEN_CLASS = 'vim-reading-nav-heading-folded';
 
 interface Hint {
 	label: string;
@@ -97,26 +95,9 @@ export class HeadingFoldHintHandler {
 
 	private toggleSection(heading: HTMLHeadingElement, doc: Document): void {
 		if (!heading.isConnected || heading.ownerDocument !== doc) return;
-		const wrapper = this.headingWrapper(heading);
-		const sizer = wrapper?.parentElement;
-		const rank = this.headingRank(heading);
-		if (!wrapper || !sizer || !rank || !sizer.matches('.markdown-preview-sizer')) return;
-		const section = this.sectionContent(wrapper, rank);
-		const collapsing = !heading.classList.contains(COLLAPSED_CLASS);
-		heading.classList.toggle(COLLAPSED_CLASS, collapsing);
-		section.forEach((element) => element.classList.toggle(HIDDEN_CLASS, collapsing));
-	}
-
-	private sectionContent(wrapper: HTMLElement, rank: number): HTMLElement[] {
-		const section: HTMLElement[] = [];
-		for (let element = wrapper.nextElementSibling; element; element = element.nextElementSibling) {
-			if (!element.instanceOf(HTMLElement)) continue;
-			const nextHeading = element.querySelector<HTMLHeadingElement>(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
-			const nextRank = nextHeading ? this.headingRank(nextHeading) : 0;
-			if (nextRank > 0 && nextRank <= rank) break;
-			section.push(element);
-		}
-		return section;
+		const indicator = heading.querySelector<HTMLElement>(':scope > .heading-collapse-indicator');
+		if (!indicator?.isConnected || indicator.ownerDocument !== doc) return;
+		indicator.click();
 	}
 
 	private getVisibleHeadings(scrollEl: HTMLElement): HTMLHeadingElement[] {
@@ -133,9 +114,6 @@ export class HeadingFoldHintHandler {
 		return wrapper?.parentElement?.matches('.markdown-preview-sizer') ? wrapper : null;
 	}
 
-	private headingRank(heading: HTMLHeadingElement): number {
-		return Number(heading.tagName.slice(1));
-	}
 
 	private createHintEl(label: string, heading: HTMLHeadingElement, doc: Document): HTMLElement {
 		const rect = heading.getBoundingClientRect();
