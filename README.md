@@ -28,9 +28,11 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 | Reading mode              | `d` / `u`             | Scroll down / up half a page                         |
 | Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
 | Reading mode              | `f`                   | Show hints for visible links                         |
+| Reading mode              | `F` (`Shift+F`)       | Show fold hints for visible headings                 |
 | Reading mode              | `/`                   | Open Obsidian's native in-document search            |
 | Reading mode              | `z`                   | Toggle reading focus                                 |
-| Hint mode                 | Hint characters       | Select a link                                        |
+| Link hint mode            | Hint characters       | Select a link                                        |
+| Heading hint mode         | Hint characters       | Toggle the selected heading section                  |
 | Focused preview           | `Shift+J` / `Shift+K` | Scroll the preview down / up                         |
 | Focused standard footnote | `Enter`               | Jump to its definition and close the preview         |
 | Focused inline footnote   | `Enter`               | Keep the preview open; do not navigate               |
