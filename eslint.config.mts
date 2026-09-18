@@ -38,6 +38,7 @@ export default tseslint.config(
 		},
 	},
 	globalIgnores([
+		".worktrees/**",
 		"node_modules",
 		"dist",
 		"esbuild.config.mjs",
