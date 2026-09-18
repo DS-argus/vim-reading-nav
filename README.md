@@ -67,10 +67,6 @@ Press `f`, then type the label beside a link to preview it. Notes, headings, blo
 | `Shift+J` / `Shift+K`      | Scroll the preview; lowercase `j/k` scroll the note                     |
 | `Esc`                      | Close the preview                                                       |
 
-## Heading folds
-
-Press `Shift+F` in Reading mode, then type the orange label beside a visible heading to collapse or expand its section using Obsidian's native heading folding. A collapsed heading remains visible with its fold indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level.
-
 ### Split opening (optional)
 
 **Enable split opening** under **Settings → Vim Reading Navigation** is on by default. Select a Markdown link, then:
@@ -86,6 +82,25 @@ Lowercase reuses an adjacent pane whose shared edge matches the source, adding a
 - **Open external links immediately:** off by default; enable to skip URL confirmation.
 
 Non-Markdown files open normally but have no preview or split shortcut. Links inside embedded notes, tags, and `obsidian://` links are excluded. Preview content is display-only.
+
+## Heading folds
+
+Press `Shift+F` in Reading mode, then type the orange label beside a visible heading to collapse or expand its section using Obsidian's native heading folding. A collapsed heading remains visible with its fold indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level.
+
+### Custom hint colors
+
+The default link and heading hint colors follow Obsidian theme variables. Override them with a CSS snippet:
+
+```css
+.vim-reading-nav-hint {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+}
+
+.vim-reading-nav-heading-hint {
+  background-color: var(--color-orange);
+}
+```
 
 ## Reading focus
 
