@@ -10,7 +10,8 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 ## Features
 
 - Vim-style instant scrolling in Reading mode, including key repeat
-- Vimium-style `f` hints for visible links
+- [Link previews](#link-previews) with Vimium-style `f` hints for visible links
+- [Heading folds](#heading-folds) with Vimium-style `F` hints for visible heading sections
 - Persistent, mouse-independent Markdown previews for internal links and standard or inline footnotes
 - Local external-link destination confirmation before opening in the system browser
 - Cursor correction when switching from Reading mode back to the editor
@@ -28,9 +29,11 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 | Reading mode              | `d` / `u`             | Scroll down / up half a page                         |
 | Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
 | Reading mode              | `f`                   | Show hints for visible links                         |
+| Reading mode              | `F` (`Shift+F`)       | Show fold hints for visible headings                 |
 | Reading mode              | `/`                   | Open Obsidian's native in-document search            |
 | Reading mode              | `z`                   | Toggle reading focus                                 |
-| Hint mode                 | Hint characters       | Select a link                                        |
+| Link hint mode            | Hint characters       | Select a link                                        |
+| Heading hint mode         | Hint characters       | Toggle the selected heading section                  |
 | Focused preview           | `Shift+J` / `Shift+K` | Scroll the preview down / up                         |
 | Focused standard footnote | `Enter`               | Jump to its definition and close the preview         |
 | Focused inline footnote   | `Enter`               | Keep the preview open; do not navigate               |
@@ -82,6 +85,25 @@ Lowercase reuses an adjacent pane whose shared edge matches the source, adding a
 - **Open external links immediately:** off by default; enable to skip URL confirmation.
 
 Non-Markdown files open normally but have no preview or split shortcut. Links inside embedded notes, tags, and `obsidian://` links are excluded. Preview content is display-only.
+
+## Heading folds
+
+Press `Shift+F` in Reading mode, then type the orange label beside a visible heading to collapse or expand its section using Obsidian's native heading folding. A collapsed heading remains visible with its fold indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level.
+
+### Custom hint colors
+
+The default link and heading hint colors follow Obsidian theme variables. Override them with a CSS snippet:
+
+```css
+.vim-reading-nav-hint {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+}
+
+.vim-reading-nav-heading-hint {
+  background-color: var(--color-orange);
+}
+```
 
 ## Reading focus
 

@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian';
 import { CursorManager } from './cursorManager';
 import { LinkHintHandler } from './linkHintHandler';
 import { ReadingModeSearchHandler } from './searchHandler';
+import { HeadingFoldHintHandler } from './headingFoldHintHandler';
 import { ReadingModeScrollHandler } from './scrollHandler';
 import { ReadingFocus } from './readingFocus';
 import { DEFAULT_SETTINGS, normalizeReadingFocusSettings, VimReadingNavSettingTab } from './settings';
@@ -14,6 +15,7 @@ export default class VimReadingNavPlugin extends Plugin {
 	private searchHandler: ReadingModeSearchHandler | null = null;
 	private readingFocus: ReadingFocus | null = null;
 
+	private headingFoldHints: HeadingFoldHintHandler | null = null;
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new VimReadingNavSettingTab(this));
@@ -30,6 +32,8 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.linkHints = new LinkHintHandler(this);
 		this.linkHints.register();
 		this.scrollHandler = new ReadingModeScrollHandler(this, this.settings);
+		this.headingFoldHints = new HeadingFoldHintHandler(this);
+		this.headingFoldHints.register();
 		new CursorManager(this).register();
 
 		this.searchHandler = new ReadingModeSearchHandler(this);
@@ -67,12 +71,12 @@ export default class VimReadingNavPlugin extends Plugin {
 		// registerDomEvent removes listeners automatically, but hint overlays
 		// live on a document body and must be torn down explicitly.
 		this.linkHints?.cleanup();
+		this.headingFoldHints?.cleanup();
 	}
 
 	private registerForDocument(doc: Document): void {
-		// Register the link hint handler first so its keydown listener runs
-		// before the scroll handler and can stop propagation while hint mode
-		// is active (otherwise hint chars like 'j'/'k' would also scroll).
+		// Register hint handlers before scrolling so active hint input consumes keys.
+		this.headingFoldHints?.registerTo(doc);
 		this.linkHints?.registerTo(doc);
 		this.scrollHandler?.registerTo(doc);
 		this.searchHandler?.registerTo(doc);
