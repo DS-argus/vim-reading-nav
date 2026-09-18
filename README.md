@@ -67,6 +67,10 @@ Press `f`, then type the label beside a link to preview it. Notes, headings, blo
 | `Shift+J` / `Shift+K`      | Scroll the preview; lowercase `j/k` scroll the note                     |
 | `Esc`                      | Close the preview                                                       |
 
+## Heading folds
+
+Press `Shift+F` in Reading mode, then type the label beside a visible heading to collapse or expand its section. A collapsed heading remains visible and shows a `▸` indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level. Fold state lasts only until Obsidian rerenders the note.
+
 ### Split opening (optional)
 
 **Enable split opening** under **Settings → Vim Reading Navigation** is on by default. Select a Markdown link, then:
