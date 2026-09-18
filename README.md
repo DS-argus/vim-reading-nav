@@ -10,8 +10,8 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 ## Features
 
 - Vim-style instant scrolling in Reading mode, including key repeat
-- Vimium-style `f` hints for visible links
-- Vimium-style `F` hints for folding visible heading sections
+- [Link previews](#link-previews) with Vimium-style `f` hints for visible links
+- [Heading folds](#heading-folds) with Vimium-style `F` hints for visible heading sections
 - Persistent, mouse-independent Markdown previews for internal links and standard or inline footnotes
 - Local external-link destination confirmation before opening in the system browser
 - Cursor correction when switching from Reading mode back to the editor
