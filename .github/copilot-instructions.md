@@ -7,10 +7,11 @@ npm install          # install dependencies
 npm run dev          # watch mode — compiles src/main.ts → main.js with inline sourcemaps
 npm run build        # production build — runs tsc type-check, then esbuild (minified, no sourcemaps)
 npm run lint         # run eslint across the project (includes eslint-plugin-obsidianmd)
+npm test             # focused split/session regressions using Node's test runner
 npm version patch    # bump version in manifest.json, package.json, versions.json (after manually updating minAppVersion)
 ```
 
-There is no automated test suite. CI runs `npm run build` and `npm run lint` on Node 20 and 22.
+`npm test` runs deterministic split/session regression checks with mocked Obsidian host APIs; it does not replace real-app testing. CI runs `npm run build` and `npm run lint` on Node 20 and 22.
 
 ## Architecture
 

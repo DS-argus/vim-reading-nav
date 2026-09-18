@@ -45,6 +45,17 @@ export class SplitLinkNavigator {
 		return this.isAttached(leaf);
 	}
 
+	/** Validate an accepted split independently of Reading mode's replaceable DOM. */
+	isSourceContextValid(leaf: WorkspaceLeaf, doc: Document, sourcePath: string): boolean {
+		return !doc.defaultView?.closed
+			&& leaf.view instanceof MarkdownView
+			&& leaf.view.getMode() === 'preview'
+			&& leaf.view.file?.path === sourcePath
+			&& leaf.view.containerEl.ownerDocument === doc
+			&& leaf.view.containerEl.isConnected
+			&& this.isAttached(leaf);
+	}
+
 	resolve(linktext: string, sourcePath: string): ResolvedSplitTarget | null {
 		try {
 			const parsed = parseLinktext(linktext);

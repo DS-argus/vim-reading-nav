@@ -1,3 +1,4 @@
+import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
@@ -24,7 +25,18 @@ export default tseslint.config(
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
+	...obsidianmd.configs.recommended.map(config => ({
+		...config,
+		ignores: [...(config.ignores ?? []), 'tests/**'],
+	})),
+	{
+		...js.configs.recommended,
+		files: ['tests/**/*.mjs'],
+		languageOptions: {
+			globals: globals.node,
+			parserOptions: { projectService: false },
+		},
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",
