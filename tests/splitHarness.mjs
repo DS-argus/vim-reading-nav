@@ -10,6 +10,12 @@ const result = await build({
 		build.onLoad({ filter: /.*/, namespace: 'mock' }, ({ path }) => ({ contents: {
 			obsidian: `export class MarkdownView { getMode() { return this.mode ?? 'preview'; } }
 				export class WorkspaceTabs {}
+				export class Component {
+					cleanups = [];
+					register(fn) { this.cleanups.push(fn); }
+					registerEvent() {} registerDomEvent() {}
+					unload() { this.cleanups.splice(0).reverse().forEach(fn => fn()); }
+				}
 				export class TFile { constructor(path) { this.path = path; this.extension = 'md'; } }
 				export function parseLinktext(text) { const i = text.indexOf('#'); return { path: i < 0 ? text : text.slice(0,i), subpath: i < 0 ? '' : text.slice(i) }; }
 				export function resolveSubpath(cache, subpath) { return cache[subpath]; }`,
@@ -26,11 +32,12 @@ const result = await build({
 });
 const { LinkHintHandler, MarkdownView, TFile, WorkspaceTabs } = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
 
-export function harness({ adjacent = false, below = false, reflow = null, subpath = '', popout = false } = {}) {
+export function harness({ adjacent = false, below = false, reflow = null, subpath = '', popout = false, embed = false, self = false } = {}) {
 	const trace = [];
-	const doc = { defaultView: { closed: false, setTimeout, clearTimeout } };
+	class Observer { observe() {} disconnect() {} }
+	const doc = { defaultView: { closed: false, setTimeout, clearTimeout, ResizeObserver: Observer, MutationObserver: Observer } };
 	const sourceFile = new TFile('source.md');
-	const targetFile = new TFile('target.md');
+	const targetFile = self ? sourceFile : new TFile('target.md');
 	const otherFile = new TFile('other.md');
 	const root = {}, container = {}, leaves = [], events = new Map();
 	let session, active, target, finishOpen, failOpen;
@@ -65,10 +72,14 @@ export function harness({ adjacent = false, below = false, reflow = null, subpat
 		mainLeaf.getContainer = () => ({});
 	}
 	active = source;
+	const embedElement = embed ? { nodeName: 'DIV', isConnected: true, ownerDocument: doc,
+		classList: { contains: () => false }, addClass() {}, removeClass() {}, scrollIntoView() {},
+		click() { trace.push(['native-embed-click', session.focusedTarget === null, !session.preview.isOpen()]); },
+	} : null;
 	const link = { isConnected: true, ownerDocument: doc, classList: { contains: () => true },
 		getAttribute: () => `target${subpath}`, addClass() {}, removeClass() {}, scrollIntoView() {},
 	};
-	function replaceLink() { link.isConnected = false; trace.push('source DOM replaced'); }
+	function replaceLink() { (embedElement ?? link).isConnected = false; trace.push('source DOM replaced'); }
 	function created(parent, direction) {
 		trace.push(`create:${direction}`);
 		target = leaf(parent, null);
@@ -90,6 +101,7 @@ export function harness({ adjacent = false, below = false, reflow = null, subpat
 		metadataCache: { getFirstLinkpathDest: () => targetFile, getFileCache: () => ({ '#heading': {}, '#^block': {} }) },
 	}, settings: { enableSplitOpening: true, showPreviewOpeningGuidance: true },
 	registerEvent() {}, register() {}, registerDomEvent() {},
+	addChild(child) { child.onload(); return child; }, removeChild(child) { child.unload(); return child; },
 	};
 	const handler = new LinkHintHandler(plugin);
 	handler.register();
@@ -100,12 +112,12 @@ export function harness({ adjacent = false, below = false, reflow = null, subpat
 		opening = open(...args).then(result => { trace.push(result.opened ? 'opened' : result.cancelled ? 'cancelled' : 'error'); return result; });
 		return opening;
 	};
-	session.focusHint(link, sourceFile.path);
+	session.focusHint({ kind: 'internal', element: embedElement ?? link, root: embedElement ?? undefined, linktext: `target${subpath}`, sourcePath: sourceFile.path });
 	function key(key) {
 		const event = { key, shiftKey: key === key.toUpperCase(), preventDefault() {}, stopImmediatePropagation() {} };
 		return session.handleKey(event);
 	}
-	return { session, handler, source, neighbor, link, targetFile, otherFile, doc, leaves, trace, workspace,
+	return { session, handler, source, neighbor, link, embed: embedElement, targetFile, otherFile, doc, leaves, trace, workspace,
 		get target() { return target; }, get active() { return active; }, get opening() { return opening; },
 		key, replaceLink, emit,
 		start(keyName = 'v') { key(keyName); key('Enter'); },

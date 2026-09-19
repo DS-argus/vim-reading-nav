@@ -28,7 +28,7 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 | Reading mode              | `j` / `k`             | Scroll down / up                                     |
 | Reading mode              | `d` / `u`             | Scroll down / up half a page                         |
 | Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
-| Reading mode              | `f`                   | Show hints for visible links                         |
+| Reading mode              | `f`                   | Show hints for visible links and top-level Markdown embeds |
 | Reading mode              | `F` (`Shift+F`)       | Show fold hints for visible headings                 |
 | Reading mode              | `/`                   | Open Obsidian's native in-document search            |
 | Reading mode              | `z`                   | Toggle reading focus                                 |
@@ -81,10 +81,13 @@ Press `f`, then type the label beside a link to preview it. Notes, headings, blo
 
 Lowercase reuses an adjacent pane whose shared edge matches the source, adding a new tab; otherwise it creates a split. The destination opens in Reading mode, including heading/block links. Confirm within **3 seconds**; after that, `Enter` opens in the current tab.
 
+For heading/block splits, alignment waits for the first Reading view DOM, reconnects if it is replaced, and follows rendered sections and embeds as they change size. Alignment stops on keyboard, pointer, wheel, or touch input, or when you leave the destination, so it does not override subsequent navigation.
+The same alignment also applies after a native Markdown embed click targeting a heading or block in the current note. The native button still performs the navigation; ordinary links and cross-note embed clicks are unchanged.
+
 - **Show preview opening guidance:** on by default; disabled and hidden while split opening is off.
 - **Open external links immediately:** off by default; enable to skip URL confirmation.
 
-Non-Markdown files open normally but have no preview or split shortcut. Links inside embedded notes, tags, and `obsidian://` links are excluded. Preview content is display-only.
+Top-level Markdown embeds that resolve to an existing Markdown note also receive `f` hints. Their source path and heading/block subpath are preserved for preview and split-opening. Plain `Enter` activates Obsidian's native embed open button; ordinary links and split-opening retain their existing navigation behavior. Links and embeds inside the embedded note remain excluded. PDF, image, audio, video, iframe, unresolved, and non-Markdown embeds do not receive hints. Other non-Markdown files open normally but have no preview or split shortcut; tags, `obsidian://` links, and preview content remain excluded or display-only.
 
 ## Heading folds
 

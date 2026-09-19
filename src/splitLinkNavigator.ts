@@ -6,11 +6,13 @@ import {
 	WorkspaceTabs,
 } from 'obsidian';
 import type {
+	App,
 	OpenViewState,
 	WorkspaceContainer,
 	WorkspaceLeaf,
 } from 'obsidian';
 import type VimReadingNavPlugin from './main';
+import { SubpathAlignment } from './subpathAlignment';
 
 export type SplitOpenDirection = 'right' | 'below';
 
@@ -23,12 +25,38 @@ export type SplitOpenResult =
 	| { opened: true; leaf: WorkspaceLeaf }
 	| { opened: false; cancelled: boolean; error?: string };
 
+export function resolveMarkdownTarget(
+	app: App,
+	linktext: string,
+	sourcePath: string,
+): ResolvedSplitTarget | null {
+	try {
+		const parsed = parseLinktext(linktext);
+		const sourceFile = app.vault.getAbstractFileByPath(sourcePath);
+		const file = parsed.path
+			? app.metadataCache.getFirstLinkpathDest(parsed.path, sourcePath)
+			: sourceFile instanceof TFile ? sourceFile : null;
+		if (!(file instanceof TFile) || file.extension !== 'md') return null;
+		if (parsed.subpath) {
+			const cache = app.metadataCache.getFileCache(file);
+			if (!cache || !resolveSubpath(cache, parsed.subpath)) return null;
+		}
+		return { file, subpath: parsed.subpath };
+	} catch {
+		return null;
+	}
+}
+
 /** Opens existing Markdown targets in currently adjacent, matching split groups. */
 export class SplitLinkNavigator {
 
-	constructor(private readonly plugin: VimReadingNavPlugin) {}
+	private alignment: SubpathAlignment | null = null;
 
-	findSourceLeaf(link: HTMLAnchorElement): WorkspaceLeaf | null {
+	constructor(private readonly plugin: VimReadingNavPlugin) {
+		plugin.register(() => this.dispose());
+	}
+
+	findSourceLeaf(link: HTMLElement): WorkspaceLeaf | null {
 		let result: WorkspaceLeaf | null = null;
 		this.plugin.app.workspace.iterateAllLeaves((leaf) => {
 			if (result || !(leaf.view instanceof MarkdownView) || leaf.view.getMode() !== 'preview') return;
@@ -39,7 +67,7 @@ export class SplitLinkNavigator {
 		return result;
 	}
 
-	isSourceLeafValid(leaf: WorkspaceLeaf, link: HTMLAnchorElement): boolean {
+	isSourceLeafValid(leaf: WorkspaceLeaf, link: HTMLElement): boolean {
 		if (!(leaf.view instanceof MarkdownView) || leaf.view.getMode() !== 'preview') return false;
 		if (leaf.view.containerEl.ownerDocument !== link.ownerDocument || !leaf.view.containerEl.contains(link)) return false;
 		return this.isAttached(leaf);
@@ -57,21 +85,7 @@ export class SplitLinkNavigator {
 	}
 
 	resolve(linktext: string, sourcePath: string): ResolvedSplitTarget | null {
-		try {
-			const parsed = parseLinktext(linktext);
-			const sourceFile = this.plugin.app.vault.getAbstractFileByPath(sourcePath);
-			const file = parsed.path
-				? this.plugin.app.metadataCache.getFirstLinkpathDest(parsed.path, sourcePath)
-				: sourceFile instanceof TFile ? sourceFile : null;
-			if (!(file instanceof TFile) || file.extension !== 'md') return null;
-			if (parsed.subpath) {
-				const cache = this.plugin.app.metadataCache.getFileCache(file);
-				if (!cache || !resolveSubpath(cache, parsed.subpath)) return null;
-			}
-			return { file, subpath: parsed.subpath };
-		} catch {
-			return null;
-		}
+		return resolveMarkdownTarget(this.plugin.app, linktext, sourcePath);
 	}
 
 	canSplit(linktext: string, sourcePath: string): boolean {
@@ -161,9 +175,8 @@ export class SplitLinkNavigator {
 
 			this.plugin.app.workspace.setActiveLeaf(targetLeaf, { focus: true });
 			// Apply the destination after opening and focus have restored view state.
-			// Markdown's native subpath navigation schedules scrolling with its renderer;
-			// do not race it with the initial file/mode setup or a fixed-delay retry.
-			if (resolved.subpath) targetLeaf.setEphemeralState({ subpath: resolved.subpath });
+			// Keep native navigation aligned as virtual sections and embeds finish layout.
+			if (resolved.subpath) this.alignSubpath(targetLeaf, resolved.file, resolved.subpath);
 			return { opened: true, leaf: targetLeaf };
 		} catch (error) {
 			const current = this.isCurrent(isCurrent);
@@ -177,6 +190,19 @@ export class SplitLinkNavigator {
 	}
 
 
+	dispose(): void {
+		if (this.alignment) this.plugin.removeChild(this.alignment);
+		this.alignment = null;
+	}
+
+	alignSubpath(leaf: WorkspaceLeaf, file: TFile, subpath: string): void {
+		this.dispose();
+		const alignment = new SubpathAlignment(this.plugin.app, leaf, file, subpath, () => {
+			if (this.alignment === alignment) this.dispose();
+		});
+		this.alignment = alignment;
+		this.plugin.addChild(alignment);
+	}
 	private tabGroup(leaf: WorkspaceLeaf): WorkspaceTabs | null {
 		const parent = leaf.parent;
 		return parent instanceof WorkspaceTabs ? parent : null;
