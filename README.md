@@ -21,126 +21,81 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 
 ## Key mappings
 
-### Built-in bare mappings
+| Key | Action |
+| --- | --- |
+| `j` / `k` | Scroll down / up |
+| `d` / `u` | Scroll half a page down / up |
+| `gg` / `G` | Jump to the top / bottom |
+| `f` | Show hints for links and top-level Markdown embeds |
+| `F` (`Shift+F`) | Show heading-fold hints |
+| `/` | Open Obsidian's in-note search |
+| `z` | Toggle reading focus |
 
-| Context                   | Key                   | Action                                               |
-| ------------------------- | --------------------- | ---------------------------------------------------- |
-| Reading mode              | `j` / `k`             | Scroll down / up                                     |
-| Reading mode              | `d` / `u`             | Scroll down / up half a page                         |
-| Reading mode              | `gg` / `G`            | Scroll to the top / bottom                           |
-| Reading mode              | `f`                   | Show hints for visible links and top-level Markdown embeds |
-| Reading mode              | `F` (`Shift+F`)       | Show fold hints for visible headings                 |
-| Reading mode              | `/`                   | Open Obsidian's native in-document search            |
-| Reading mode              | `z`                   | Toggle reading focus                                 |
-| Link hint mode            | Hint characters       | Select a link                                        |
-| Heading hint mode         | Hint characters       | Toggle the selected heading section                  |
-| Focused preview           | `Shift+J` / `Shift+K` | Scroll the preview down / up                         |
-| Focused standard footnote | `Enter`               | Jump to its definition and close the preview         |
-| Focused inline footnote   | `Enter`               | Keep the preview open; do not navigate               |
-| Focused internal link     | `Enter`               | Follow the link and close the preview                |
-| Focused external link     | `Enter`               | Open the confirmed destination in the system browser |
-| Hint or preview mode      | `Esc`                 | Cancel and close                                     |
+Mappings apply only in Reading mode and leave inputs, editors, and modals alone. Switching back to the editor also adjusts the cursor to the reading position.
 
-### Configurable page-scroll bindings
+### Page-scroll bindings
 
-| Key                          | Action                         |
-| ---------------------------- | ------------------------------ |
-| `Ctrl+D` (default)           | Scroll down half a page        |
-| `Ctrl+U` (default)           | Scroll up half a page          |
-| Not set (suggested `Ctrl+F`) | Scroll down one Vim-style page |
-| Not set (suggested `Ctrl+B`) | Scroll up one Vim-style page   |
+Configure these in **Settings → Vim Reading Navigation**, not Obsidian Hotkeys.
 
-Configure these Reading-mode bindings under **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Editor bindings are unaffected.
+| Action | Default |
+| --- | --- |
+| Half page down / up | `Ctrl+D` / `Ctrl+U` |
+| Full page down / up | Unassigned |
 
-The settings page groups controls into **Scrolling**, **Reading focus**, and **Links and previews**. Existing saved preferences are retained when defaults change.
+Editor bindings are unaffected. On Windows and Linux, assigning `Ctrl+F` overrides in-note search in Reading mode.
 
-> On Windows and Linux, assigning `Ctrl+F` overrides in-note search in Reading mode.
-
-Built-in bare mappings and configurable page-scroll bindings are active only while the current Markdown view is in **Reading mode**, and they are ignored in inputs, editors, and modals. Lowercase `j`/`k` continue to scroll the note while an internal-link preview is open.
-
-Press `/` in Reading mode to open Obsidian's native in-document search. Search remains live while typing; use `Enter` and `Shift+Enter` for the next and previous result. `n` and `N` are intentionally not remapped while the native search field has focus.
+In search, use `Enter` / `Shift+Enter` for the next / previous result.
 
 ## Link previews
 
-Press `f`, then type the label beside a link to preview it. Notes, headings, blocks, and footnotes are supported. External links show their destination URL without fetching the page.
+Press `f`, then type a hint label to select a link or Markdown embed.
 
-| Key after selecting a link | Action                                                                  |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `Enter`                    | Open the link; jump to a standard footnote (inline footnotes stay open) |
-| `Shift+J` / `Shift+K`      | Scroll the preview; lowercase `j/k` scroll the note                     |
-| `Esc`                      | Close the preview                                                       |
+Supported targets include notes, headings, blocks, footnotes, external web links, and top-level Markdown embeds. Embed hints appear beside the native open icon. Links inside embeds and non-Markdown embeds are excluded.
 
-### Split opening (optional)
+| Key after selection | Action |
+| --- | --- |
+| `Enter` | Open the target |
+| `Shift+J` / `Shift+K` | Scroll the preview |
+| `j` / `k` | Scroll the note |
+| `Esc` | Close the preview or cancel hints |
 
-**Enable split opening** under **Settings → Vim Reading Navigation** is on by default. Select a Markdown link, then:
+Standard footnotes jump to their definitions; inline footnotes are preview-only. Other non-Markdown file links open normally without a preview.
 
-| Direction | Open beside the note | Always create a new split |
-| --------- | -------------------- | ------------------------- |
-| Right     | `v`, then `Enter`    | `V`, then `Enter`         |
-| Below     | `h`, then `Enter`    | `H`, then `Enter`         |
+External links show a URL confirmation before opening. Enable **Open external links immediately** to skip confirmation.
 
-Lowercase reuses an adjacent pane whose shared edge matches the source, adding a new tab; otherwise it creates a split. The destination opens in Reading mode, including heading/block links. Confirm within **3 seconds**; after that, `Enter` opens in the current tab.
+### Split opening
 
-For heading/block splits, alignment waits for the first Reading view DOM, reconnects if it is replaced, and follows rendered sections and embeds as they change size. Alignment stops on keyboard, pointer, wheel, or touch input, or when you leave the destination, so it does not override subsequent navigation.
-The same alignment also applies after a native Markdown embed click targeting a heading or block in the current note. The native button still performs the navigation; ordinary links and cross-note embed clicks are unchanged.
+Select a Markdown link or embed, then press a direction key followed by `Enter`:
 
-- **Show preview opening guidance:** on by default; disabled and hidden while split opening is off.
-- **Open external links immediately:** off by default; enable to skip URL confirmation.
+| Direction | Reuse an adjacent pane when possible | Always create a new split |
+| --- | --- | --- |
+| Right | `v` → `Enter` | `V` → `Enter` |
+| Below | `h` → `Enter` | `H` → `Enter` |
 
-Top-level Markdown embeds that resolve to an existing Markdown note also receive `f` hints. Their source path and heading/block subpath are preserved for preview and split-opening. Plain `Enter` activates Obsidian's native embed open button; ordinary links and split-opening retain their existing navigation behavior. Links and embeds inside the embedded note remain excluded. PDF, image, audio, video, iframe, unresolved, and non-Markdown embeds do not receive hints. Other non-Markdown files open normally but have no preview or split shortcut; tags, `obsidian://` links, and preview content remain excluded or display-only.
+Reusing a pane adds a new tab rather than replacing its current note. Destinations open in Reading mode and preserve heading/block targets.
+
+Confirm within **3 seconds**; otherwise, `Enter` opens in the current tab. Split opening and its preview guidance are enabled by default and can be disabled in settings.
 
 ## Heading folds
 
-Press `Shift+F` in Reading mode, then type the orange label beside a visible heading to collapse or expand its section using Obsidian's native heading folding. A collapsed heading remains visible with its fold indicator. Sections include nested lower-level headings and stop at the next heading of the same or higher level.
-
-### Custom hint colors
-
-The default link and heading hint colors follow Obsidian theme variables. Override them with a CSS snippet:
-
-```css
-.vim-reading-nav-hint {
-  color: var(--text-on-accent);
-  background-color: var(--interactive-accent);
-}
-
-.vim-reading-nav-heading-hint {
-  background-color: var(--color-orange);
-}
-```
+Press `F`, then type the label beside a visible heading to fold or unfold its section. The heading stays visible; its section includes nested headings up to the next heading of equal or higher level.
 
 ## Reading focus
 
-Keep the passage you are reading bright while dimming surrounding text, without hiding the workspace or changing your pane layout.
+Press `z`, click the pane-header focus icon, or run **Toggle reading focus** from the command palette.
 
-### Toggle and status
-
-- Press `z` in Reading mode, click the **focus icon in the pane header**, or run **Vim Reading Navigation: Toggle reading focus** from the command palette.
-- The header icon is highlighted while enabled, and a brief Obsidian notice confirms each toggle. The icon supports keyboard activation with Enter or Space.
-- If your theme or settings hide the pane header, use `z` or the command; toggle notices still appear.
-- Holding `z` does not toggle repeatedly. Inputs, modals, editors, and active link-hint input are left alone. Additional command shortcuts can be assigned under **Settings → Hotkeys**.
-
-**Focus follows the active Reading pane.** Switching panes removes the effect from the previous pane and applies it to the newly active Reading pane. The enabled state is shared within the vault session, not stored independently for each pane. Other panes, link-hint overlays, and separate preview popups retain their appearance. Editing and non-Markdown views have no focus effect; returning to a Reading pane resumes it while enabled.
-
-### Focus range
-
-The block nearest the viewport center and its surrounding context stay bright. Near the start or end of a note, the focus anchor moves toward that edge so the first and last blocks remain reachable. Notes that fit without scrolling stay fully bright. Scroll, resize, image loading, and rerendering update the focused passage automatically.
+The passage near the viewport center stays bright while surrounding text dims. Focus follows the active Reading pane without hiding the workspace.
 
 Configure **Settings → Vim Reading Navigation → Reading focus**:
 
-| Option | Default | Range |
+| Setting | Default | Range |
 | --- | --- | --- |
-| Surrounding text opacity | **50%** | 10–100%, in steps of 5; higher values keep surrounding text clearer |
-| Context blocks on each side | **2** | 0–5 blocks before and after the selected block |
+| Surrounding text opacity | 50% | 10–100% |
+| Context blocks on each side | 2 | 0–5 |
 
-The default highlights **up to 5 blocks**: the selected block plus 2 on each side. Set the context to 0 for only the selected block, or 5 for up to 11 blocks. At 100% opacity, surrounding text is not visibly dimmed, but focus remains enabled.
+Lists, tables, code blocks, and embeds are treated as whole blocks, so large blocks may keep much of the screen bright.
 
-Both options are saved and applied immediately. **Focus starts off after each plugin load**; its enabled state is not saved. Existing saved preferences are retained when defaults change.
-
-### Block boundaries and limitations
-
-Paragraphs, headings, lists, tables, code blocks, blockquotes, and similar top-level rendered blocks are supported. A long list, table, code block, or embed is treated as a single block, so a large block can keep most of the viewport bright. Nested elements are not dimmed again.
-
-Only mounted top-level `el-*` wrappers directly inside `.markdown-preview-sizer` are considered; unsupported renderer layouts are left unchanged, and offscreen content is not materialized. This is a reading-focus feature, not a Zen mode that hides workspace UI.
+Preferences are saved, but focus starts off each time the plugin loads.
 
 ## Usage
 
