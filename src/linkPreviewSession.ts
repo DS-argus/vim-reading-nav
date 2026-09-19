@@ -17,15 +17,28 @@ const PENDING_DIRECTION_TIMEOUT_MS = 3000;
 export type FocusedTarget =
 	| {
 		kind: 'internal';
-		link: HTMLAnchorElement;
+		link: HTMLElement;
 		linktext: string;
 		sourcePath: string;
 		sourceLeaf: WorkspaceLeaf | null;
 		canSplit: boolean;
+		activation: 'native' | 'linktext';
 	}
 	| { kind: 'standardFootnote'; link: HTMLAnchorElement; sourcePath: string; id: string }
 	| { kind: 'inlineFootnote'; link: HTMLAnchorElement }
 	| { kind: 'external'; link: HTMLAnchorElement; url: URL };
+
+export type LinkHintTarget =
+	| {
+		kind: 'internal';
+		element: HTMLElement;
+		linktext: string;
+		sourcePath: string;
+		root?: HTMLElement;
+	}
+	| { kind: 'standardFootnote'; link: HTMLAnchorElement; sourcePath: string; id: string }
+	| { kind: 'inlineFootnote'; link: HTMLAnchorElement; markdown: string; sourcePath: string }
+	| { kind: 'external'; link: HTMLAnchorElement };
 
 interface PendingDirection {
 	direction: SplitOpenDirection;
@@ -63,28 +76,33 @@ export class LinkPreviewSession {
 		this.navigator = new SplitLinkNavigator(plugin);
 	}
 
-	focusHint(link: HTMLAnchorElement, sourcePath: string, footnote: FootnoteReference | undefined): void {
+	focusHint(target: LinkHintTarget): void {
+		const link = target.kind === 'internal' ? target.element : target.link;
 		if (!this.isValidLink(link)) return;
 		this.clear(true);
-		if (footnote) {
-			this.focusFootnote(link, sourcePath, footnote);
+		if (target.kind === 'internal') {
+			this.focusInternal(target);
 			return;
 		}
-		if (link.classList.contains('internal-link')) {
-			this.focusInternal(link, sourcePath);
+		if (target.kind === 'standardFootnote') {
+			this.focusFootnote(target.link, target.sourcePath, { kind: 'standard', id: target.id });
 			return;
 		}
-		const url = parseHttpUrl(link.getAttribute('href'));
+		if (target.kind === 'inlineFootnote') {
+			this.focusFootnote(target.link, target.sourcePath, { kind: 'inline', markdown: target.markdown });
+			return;
+		}
+		const url = parseHttpUrl(target.link.getAttribute('href'));
 		if (!url) return;
 		if (this.plugin.settings.openExternalLinksImmediately) {
-			this.openExternal(url, link);
+			this.openExternal(url, target.link);
 			return;
 		}
-		this.focusedTarget = { kind: 'external', link, url };
-		this.focusElement(link);
+		this.focusedTarget = { kind: 'external', link: target.link, url };
+		this.focusElement(target.link);
 		if (this.isValidFocusedTarget()) {
 			this.setGuidance(previewGuidance('external'));
-			this.preview.openExternal(url, link);
+			this.preview.openExternal(url, target.link);
 		}
 	}
 
@@ -183,11 +201,11 @@ export class LinkPreviewSession {
 
 	dispose(): void {
 		this.clear(true);
+		this.navigator.dispose();
 	}
 
-	private focusInternal(link: HTMLAnchorElement, sourcePath: string): void {
-		const linktext = link.getAttribute('data-href') ?? link.getAttribute('href');
-		if (!linktext) return;
+	private focusInternal(target: Extract<LinkHintTarget, { kind: 'internal' }>): void {
+		const { element: link, linktext, sourcePath } = target;
 		const sourceLeaf = this.navigator.findSourceLeaf(link);
 		const canSplit = sourceLeaf !== null && this.navigator.canSplit(linktext, sourcePath);
 		this.focusedTarget = {
@@ -197,6 +215,7 @@ export class LinkPreviewSession {
 			sourcePath,
 			sourceLeaf,
 			canSplit,
+			activation: target.root ? 'native' : 'linktext',
 		};
 		this.focusElement(link);
 		if (this.isValidFocusedTarget()) {
@@ -295,7 +314,14 @@ export class LinkPreviewSession {
 		if (focused.kind === 'inlineFootnote') return;
 		this.clear(true);
 		if (focused.kind === 'internal') {
-			void this.plugin.app.workspace.openLinkText(focused.linktext, focused.sourcePath, false);
+			if (focused.activation === 'native') {
+				const target = this.navigator.resolve(focused.linktext, focused.sourcePath);
+				focused.link.click();
+				// Native self-links can scroll before embedded sections have acquired their heights.
+				if (target?.subpath && target.file.path === focused.sourcePath && focused.sourceLeaf) {
+					this.navigator.alignSubpath(focused.sourceLeaf, target.file, target.subpath);
+				}
+			} else void this.plugin.app.workspace.openLinkText(focused.linktext, focused.sourcePath, false);
 		} else if (focused.kind === 'standardFootnote') {
 			focused.link.click();
 		} else {
@@ -307,7 +333,7 @@ export class LinkPreviewSession {
 		link.ownerDocument.defaultView?.open(url.href, '_blank');
 	}
 
-	private focusElement(link: HTMLAnchorElement): void {
+	private focusElement(link: HTMLElement): void {
 		if (!this.isValidLink(link)) {
 			this.clear(true);
 			return;
@@ -402,7 +428,7 @@ export class LinkPreviewSession {
 			|| this.navigator.isSourceLeafValid(focused.sourceLeaf, focused.link);
 	}
 
-	private isValidLink(link: HTMLAnchorElement): boolean {
+	private isValidLink(link: HTMLElement): boolean {
 		return link.isConnected && link.ownerDocument === this.doc;
 	}
 

@@ -1,18 +1,22 @@
 import { MarkdownView } from 'obsidian';
 import type VimReadingNavPlugin from './main';
 import { FootnoteResolver } from './footnoteResolver';
-import { LinkPreviewSession, parseHttpUrl } from './linkPreviewSession';
+import {
+	collectVisibleLinkHintTargets,
+	createHintElement,
+	hintTargetElement,
+} from './markdownEmbedHints';
+import { LinkPreviewSession } from './linkPreviewSession';
+import type { LinkHintTarget } from './linkPreviewSession';
 import { bindingMatchesEvent } from './settings';
 import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
 const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
-const FOOTNOTE_REFERENCE_SELECTOR = 'a.footnote-link, sup.footnote-ref > a';
 
 interface Hint {
 	label: string;
-	link: HTMLAnchorElement;
+	target: LinkHintTarget;
 	el: HTMLElement;
-	sourcePath: string;
 }
 
 interface DocumentState {
@@ -104,13 +108,14 @@ export class LinkHintHandler {
 		const scrollEl = getScrollElement(view);
 		const sourcePath = view.file?.path;
 		if (!scrollEl || !sourcePath) return;
-		const links = this.getVisibleLinks(scrollEl);
-		if (links.length === 0) return;
-		const labels = this.generateLabels(links.length);
+		const targets = collectVisibleLinkHintTargets(scrollEl, this.plugin.app, sourcePath, this.footnotes);
+		if (targets.length === 0) return;
+		const labels = this.generateLabels(targets.length);
+		const bounds = scrollEl.getBoundingClientRect();
 		state.active = true;
-		links.forEach((link, index) => {
+		targets.forEach((target, index) => {
 			const label = labels[index];
-			if (label) state.hints.push({ label, link, el: this.createHintEl(label, link, doc), sourcePath });
+			if (label) state.hints.push({ label, target, el: createHintElement(label, target, doc, bounds) });
 		});
 	}
 
@@ -136,8 +141,9 @@ export class LinkHintHandler {
 	}
 
 	private selectHint(doc: Document, state: DocumentState, hint: Hint): void {
-		if (!hint.link.isConnected || hint.link.ownerDocument !== doc) return;
-		state.session.focusHint(hint.link, hint.sourcePath, this.footnotes.get(hint.link));
+		const element = hintTargetElement(hint.target);
+		if (!element.isConnected || element.ownerDocument !== doc) return;
+		state.session.focusHint(hint.target);
 	}
 
 	private resetState(state: DocumentState): void {
@@ -174,9 +180,10 @@ export class LinkHintHandler {
 				this.disposeDocument(doc);
 				continue;
 			}
-			if (state.active && state.hints.some((hint) => !hint.link.isConnected || hint.link.ownerDocument !== doc)) {
-				this.exitHintMode(state);
-			}
+			if (state.active && state.hints.some((hint) => {
+				const element = hintTargetElement(hint.target);
+				return !element.isConnected || element.ownerDocument !== doc;
+			})) this.exitHintMode(state);
 			state.session.reapInvalid();
 		}
 	}
@@ -188,32 +195,6 @@ export class LinkHintHandler {
 			this.states.set(doc, state);
 		}
 		return state;
-	}
-
-	private getVisibleLinks(scrollEl: HTMLElement): HTMLAnchorElement[] {
-		const links = new Set(Array.from(scrollEl.querySelectorAll<HTMLAnchorElement>(
-			'a.internal-link, a.external-link, a[href], ' + FOOTNOTE_REFERENCE_SELECTOR,
-		)));
-		const bounds = scrollEl.getBoundingClientRect();
-		return Array.from(links).filter((link) => {
-			if (link.closest('.markdown-embed')) return false;
-			if (link.matches(FOOTNOTE_REFERENCE_SELECTOR)) return this.footnotes.get(link) !== undefined && this.isVisible(link, bounds);
-			if (link.classList.contains('internal-link')) return this.isVisible(link, bounds);
-			return parseHttpUrl(link.getAttribute('href')) !== null && this.isVisible(link, bounds);
-		});
-	}
-
-	private isVisible(link: HTMLAnchorElement, bounds: DOMRect): boolean {
-		const rect = link.getBoundingClientRect();
-		return rect.width > 0 && rect.height > 0 && rect.bottom > bounds.top && rect.top < bounds.bottom;
-	}
-
-	private createHintEl(label: string, link: HTMLAnchorElement, doc: Document): HTMLElement {
-		const rect = link.getBoundingClientRect();
-		const el = doc.body.createSpan({ cls: 'vim-reading-nav-hint', text: label.toUpperCase() });
-		el.style.left = `${rect.left}px`;
-		el.style.top = `${rect.top + rect.height / 2}px`;
-		return el;
 	}
 
 	private generateLabels(count: number): string[] {

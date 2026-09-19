@@ -38,6 +38,42 @@ test('same-pane Enter bypasses split creation', () => {
 	assert.deepEqual(h.trace, [['same-pane', 'target#heading', 'source.md', false]]);
 });
 
+
+for (const subpath of ['', '#heading', '#^block']) {
+	test(`same-pane Enter clicks the native Markdown embed control for ${subpath} after cleanup`, () => {
+		const h = harness({ subpath, embed: true });
+		assert.equal(h.embed.nodeName, 'DIV');
+		h.key('Enter');
+		assert.deepEqual(h.trace, [['native-embed-click', true, true]]);
+		h.key('Enter');
+		assert.equal(h.trace.length, 1);
+	});
+
+	for (const [key, direction] of [['v', 'vertical'], ['h', 'horizontal']]) {
+		test(`${key} split preserves Markdown embed ${subpath}`, async () => {
+			const h = harness({ subpath, embed: true });
+			h.start(key);
+			assert.equal((await h.settle()).opened, true);
+			assert.deepEqual(h.target.ephemeral, subpath ? { subpath } : undefined);
+			assert.deepEqual(h.target.openState, { state: { mode: 'preview' }, active: true });
+			assert.ok(h.trace.includes(`create:${direction}`), h.trace.join(' -> '));
+			assert.ok(!h.trace.some(event => Array.isArray(event)));
+		});
+	}
+}
+
+for (const [name, invalidate] of Object.entries({
+	Escape: h => h.key('Escape'),
+	detached: h => h.replaceLink(),
+	otherDocument: h => { h.embed.ownerDocument = {}; },
+})) {
+	test(`${name} prevents native embed activation`, () => {
+		const h = harness({ embed: true });
+		invalidate(h);
+		h.key('Enter');
+		assert.ok(!h.trace.some(event => Array.isArray(event)));
+	});
+}
 test('unconfirmed detached anchor still invalidates preview', () => {
 	const h = harness();
 	h.key('v'); h.replaceLink(); h.emit('layout-change'); h.key('Enter');
@@ -119,7 +155,7 @@ test('completion of a cancelled open does not invalidate a newer operation', asy
 	const h = harness(); h.start();
 	const oldTarget = h.target, oldOpening = h.opening;
 	h.key('Escape');
-	h.session.focusHint(h.link, 'source.md'); h.start('V');
+	h.session.focusHint({ kind: 'internal', element: h.link, linktext: 'target', sourcePath: 'source.md' }); h.start('V');
 	oldTarget.complete(); await oldOpening; await Promise.resolve();
 	assert.equal(h.session.isOpeningSplit(), true);
 	h.replaceLink(); h.emit('layout-change');
@@ -147,3 +183,36 @@ for (const [name, invalidate] of Object.entries({
 		assert.ok(!h.leaves.includes(h.target));
 	});
 }
+
+for (const subpath of ['#heading', '#^block']) {
+	test(`same-note embed ${subpath} retains native click and starts layout alignment`, () => {
+		const h = harness({ embed: true, self: true, subpath });
+		h.key('Enter');
+		assert.deepEqual(h.trace, [['native-embed-click', true, true], 'subpath']);
+		assert.deepEqual(h.source.ephemeral, { subpath });
+		assert.ok(h.session.navigator.alignment);
+		h.session.dispose();
+		assert.equal(h.session.navigator.alignment, null);
+	});
+}
+
+for (const [name, options] of Object.entries({
+	wholeNote: { embed: true, self: true },
+	ordinaryLink: { self: true, subpath: '#heading' },
+	otherNote: { embed: true, subpath: '#heading' },
+})) {
+	test(`${name} does not attach self-note alignment`, () => {
+		const h = harness(options);
+		h.key('Enter');
+		assert.equal(h.session.navigator.alignment, null);
+	});
+}
+
+test('native click switching away never scrolls the old source pane', () => {
+	const h = harness({ embed: true, self: true, subpath: '#heading', adjacent: true });
+	h.embed.click = () => h.workspace.setActiveLeaf(h.neighbor, { focus: true });
+	h.key('Enter');
+	assert.equal(h.source.ephemeral, undefined);
+	assert.equal(h.session.navigator.alignment, null);
+	assert.equal(h.active, h.neighbor);
+});
