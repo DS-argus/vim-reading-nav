@@ -19,7 +19,8 @@ export function getPreviewViewIn(app: App, doc: Document): MarkdownView | null {
 }
 
 export function getScrollElement(view: MarkdownView): HTMLElement | null {
-	return view.containerEl.querySelector<HTMLElement>('.markdown-preview-view');
+	// Live Preview embeds can also have this class, even while the editor is hidden.
+	return view.containerEl.querySelector<HTMLElement>('.markdown-reading-view .markdown-preview-view');
 }
 
 /**

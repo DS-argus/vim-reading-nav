@@ -22,6 +22,7 @@
 		"eslint-plugin-obsidianmd": "0.4.1",
 		"globals": "14.0.0",
 		"jiti": "2.6.1",
+		"linkedom": "0.18.13",
 		"obsidian": "^1.12.3",
 		"tslib": "2.4.0",
 		"typescript": "^5.8.3",
