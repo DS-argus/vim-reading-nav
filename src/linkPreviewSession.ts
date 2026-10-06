@@ -6,13 +6,17 @@ import {
 	pendingSplitGuidance,
 	previewGuidance,
 } from './previewGuidance';
+import { CopyFeedback, writeClipboard } from './clipboard';
+import { linkCopyText } from './linkCopyText';
 import { PersistentLinkPreview } from './persistentLinkPreview';
+import { consumeKey, isLiveIn } from './viewUtils';
 import {
 	SplitLinkNavigator,
 } from './splitLinkNavigator';
 import type { SplitOpenDirection } from './splitLinkNavigator';
 
 const PENDING_DIRECTION_TIMEOUT_MS = 3000;
+const COPY_KEY = 'y';
 
 export type FocusedTarget =
 	| {
@@ -25,7 +29,7 @@ export type FocusedTarget =
 		activation: 'native' | 'linktext';
 	}
 	| { kind: 'standardFootnote'; link: HTMLAnchorElement; sourcePath: string; id: string }
-	| { kind: 'inlineFootnote'; link: HTMLAnchorElement }
+	| { kind: 'inlineFootnote'; link: HTMLAnchorElement; markdown: string }
 	| { kind: 'external'; link: HTMLAnchorElement; url: URL };
 
 export type LinkHintTarget =
@@ -66,6 +70,7 @@ export class LinkPreviewSession {
 	private pendingTimer: number | null = null;
 	private pendingDeadline = 0;
 	private splitOpening: Extract<FocusedTarget, { kind: 'internal' }> | null = null;
+	private readonly copied = new CopyFeedback();
 
 	constructor(
 		private readonly plugin: VimReadingNavPlugin,
@@ -116,10 +121,10 @@ export class LinkPreviewSession {
 		}
 		if (this.splitOpening) {
 			if (evt.key === 'Escape' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
-				this.consume(evt);
+				consumeKey(evt);
 				this.clear(true);
 			} else {
-				this.consume(evt);
+				consumeKey(evt);
 			}
 			return true;
 		}
@@ -133,20 +138,20 @@ export class LinkPreviewSession {
 		if (!pending) {
 			const initial = this.directionForKey(evt);
 			if (initial && focused.kind === 'internal' && focused.canSplit) {
-				this.consume(evt);
+				consumeKey(evt);
 				this.setPendingDirection(initial);
 				return true;
 			}
 		} else {
 			const replacement = this.directionForKey(evt);
 			if (replacement && focused.kind === 'internal' && focused.canSplit) {
-				this.consume(evt);
+				consumeKey(evt);
 				this.setPendingDirection(replacement);
 				return true;
 			}
 			this.clearPendingDirection();
 			if (evt.key === 'Enter' && focused.kind === 'internal' && focused.canSplit) {
-				this.consume(evt);
+				consumeKey(evt);
 				void this.activateSplit(focused, pending);
 				return true;
 			}
@@ -155,22 +160,40 @@ export class LinkPreviewSession {
 		if (this.preview.isOpen() && evt.shiftKey && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
 			const key = evt.key.toLowerCase();
 			if (key === 'j' || key === 'k') {
-				this.consume(evt);
+				consumeKey(evt);
 				this.preview.scroll(key === 'j' ? 'down' : 'up');
 				return true;
 			}
 		}
 		if (evt.key === 'Enter') {
-			this.consume(evt);
+			consumeKey(evt);
 			this.activate(focused);
 			return true;
 		}
 		if (evt.key === 'Escape') {
-			this.consume(evt);
+			consumeKey(evt);
 			this.clear(true);
 			return true;
 		}
+		if (evt.key === COPY_KEY && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
+			consumeKey(evt);
+			if (!evt.repeat) void this.copy(focused);
+			return true;
+		}
 		return false;
+	}
+
+	/** Copies the focused target; the focus and preview stay. */
+	private async copy(focused: FocusedTarget): Promise<void> {
+		let text: string | null;
+		try {
+			text = await linkCopyText(focused, this.footnotes);
+		} catch (error) {
+			console.error('Vim Reading Navigation: failed to read the footnote to copy', error);
+			return;
+		}
+		if (text === null || !(await writeClipboard(text))) return;
+		if (this.focusedTarget === focused && this.isValidFocusedTarget()) this.copied.show(focused.link);
 	}
 
 	resize(): void {
@@ -226,7 +249,7 @@ export class LinkPreviewSession {
 
 	private focusFootnote(link: HTMLAnchorElement, sourcePath: string, footnote: FootnoteReference): void {
 		if (footnote.kind === 'inline') {
-			this.focusedTarget = { kind: 'inlineFootnote', link };
+			this.focusedTarget = { kind: 'inlineFootnote', link, markdown: footnote.markdown };
 			this.focusElement(link);
 			if (this.isValidFocusedTarget()) {
 				this.setGuidance(previewGuidance('inlineFootnote'));
@@ -347,6 +370,7 @@ export class LinkPreviewSession {
 		this.splitOpening = null;
 		this.clearPendingDirection(false);
 		this.focusedTarget?.link.removeClass('vim-reading-nav-link-focused');
+		this.copied.clear();
 		this.focusedTarget = null;
 		if (closePreview) this.preview.close();
 	}
@@ -429,11 +453,6 @@ export class LinkPreviewSession {
 	}
 
 	private isValidLink(link: HTMLElement): boolean {
-		return link.isConnected && link.ownerDocument === this.doc;
-	}
-
-	private consume(evt: KeyboardEvent): void {
-		evt.preventDefault();
-		evt.stopImmediatePropagation();
+		return isLiveIn(link, this.doc);
 	}
 }

@@ -189,3 +189,36 @@
 .vim-reading-nav-heading-hint {
 	background-color: var(--color-orange);
 }
+
+/* Copy hints share one color. Code block hints sit on the right edge, where
+   the native copy button is. */
+.vim-reading-nav-code-hint,
+.vim-reading-nav-inline-code-hint {
+	background-color: var(--color-purple);
+}
+
+.vim-reading-nav-code-hint {
+	transform: translate(-100%, -50%);
+}
+
+/* Inline code is often a character or two, so its hint is a badge on the
+   span's top-left corner rather than a label over the code. Slightly smaller
+   than other hints so it hides at most about 2% of even one-character code. */
+.vim-reading-nav-inline-code-hint {
+	padding: 0 4px;
+	font-size: 10px;
+	line-height: 1.3;
+	transform: translate(-55%, -45%);
+}
+
+/* Briefly marks what was just copied. */
+.markdown-rendered .vim-reading-nav-copied {
+	outline: 1px solid var(--text-success);
+	outline-offset: 1px;
+}
+
+/* A copied link keeps its focus ring and only turns green. */
+.markdown-rendered .vim-reading-nav-link-focused.vim-reading-nav-copied {
+	outline: 2px solid var(--text-success);
+	outline-offset: 2px;
+}

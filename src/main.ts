@@ -1,5 +1,7 @@
 import { Plugin } from 'obsidian';
+import { CodeCopyHintHandler } from './codeCopyHintHandler';
 import { CursorManager } from './cursorManager';
+import { HintModes } from './hintModes';
 import { LinkHintHandler } from './linkHintHandler';
 import { ReadingModeSearchHandler } from './searchHandler';
 import { HeadingFoldHintHandler } from './headingFoldHintHandler';
@@ -14,8 +16,10 @@ export default class VimReadingNavPlugin extends Plugin {
 	private scrollHandler: ReadingModeScrollHandler | null = null;
 	private searchHandler: ReadingModeSearchHandler | null = null;
 	private readingFocus: ReadingFocus | null = null;
-
 	private headingFoldHints: HeadingFoldHintHandler | null = null;
+	private codeCopyHints: CodeCopyHintHandler | null = null;
+	private hintModes: HintModes | null = null;
+
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new VimReadingNavSettingTab(this));
@@ -29,11 +33,15 @@ export default class VimReadingNavPlugin extends Plugin {
 			callback: () => readingFocus.toggle(),
 		});
 
-		this.linkHints = new LinkHintHandler(this);
+		const hintModes = new HintModes();
+		this.hintModes = hintModes;
+		this.linkHints = new LinkHintHandler(this, hintModes);
 		this.linkHints.register();
 		this.scrollHandler = new ReadingModeScrollHandler(this, this.settings);
-		this.headingFoldHints = new HeadingFoldHintHandler(this);
+		this.headingFoldHints = new HeadingFoldHintHandler(this, hintModes);
 		this.headingFoldHints.register();
+		this.codeCopyHints = new CodeCopyHintHandler(this, hintModes);
+		this.codeCopyHints.register();
 		new CursorManager(this).register();
 
 		this.searchHandler = new ReadingModeSearchHandler(this);
@@ -72,12 +80,17 @@ export default class VimReadingNavPlugin extends Plugin {
 		// live on a document body and must be torn down explicitly.
 		this.linkHints?.cleanup();
 		this.headingFoldHints?.cleanup();
+		this.codeCopyHints?.cleanup();
 	}
 
 	private registerForDocument(doc: Document): void {
-		// Register hint handlers before scrolling so active hint input consumes keys.
-		this.headingFoldHints?.registerTo(doc);
+		// Closes hints on Obsidian hotkeys. It listens on the window, ahead of every handler below.
+		this.hintModes?.registerTo(this, doc);
+		// Hint handlers come before scrolling, so keys typed into hints never scroll.
+		// Links come first among them: a focused link takes `y` to copy itself before `y` opens code hints.
 		this.linkHints?.registerTo(doc);
+		this.headingFoldHints?.registerTo(doc);
+		this.codeCopyHints?.registerTo(doc);
 		this.scrollHandler?.registerTo(doc);
 		this.searchHandler?.registerTo(doc);
 		this.readingFocus?.registerTo(doc);

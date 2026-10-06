@@ -12,6 +12,7 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 - Vim-style instant scrolling in Reading mode, including key repeat
 - [Link previews](#link-previews) with Vimium-style `f` hints for visible links
 - [Heading folds](#heading-folds) with Vimium-style `F` hints for visible heading sections
+- [Code copy](#code-copy) with Vimium-style `y` hints for code blocks and `Y` hints for inline code
 - Persistent, mouse-independent Markdown previews for internal links and standard or inline footnotes
 - Local external-link destination confirmation before opening in the system browser
 - Cursor correction when switching from Reading mode back to the editor
@@ -28,8 +29,16 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 | `gg` / `G` | Jump to the top / bottom |
 | `f` | Show hints for links and top-level Markdown embeds |
 | `F` (`Shift+F`) | Show heading-fold hints |
+| `y` | Show code-block copy hints |
+| `Y` (`Shift+Y`) | Show inline-code copy hints |
 | `/` | Open Obsidian's in-note search |
 | `z` | Toggle reading focus |
+
+While hints are showing:
+
+- Type the lowercase label to choose a target. Labels never use `f` or `y`.
+- Press `Esc`, or any other key that is not a label, to close the hints. Hint keys (`f`, `F`, `y`, `Y`) and keys such as `G` or `/` only close the hints, so press the key again to use it.
+- `Ctrl`, `Cmd`, and `Alt` shortcuts close the hints and still run, for example `Ctrl+U` or Obsidian's own shortcuts.
 
 Mappings apply only in Reading mode and leave inputs, editors, and modals alone. Switching back to the editor also adjusts the cursor to the reading position.
 
@@ -57,9 +66,21 @@ Supported targets include notes, headings, blocks, footnotes, external web links
 | `Enter` | Open the target |
 | `Shift+J` / `Shift+K` | Scroll the preview |
 | `j` / `k` | Scroll the note |
+| `y` | Copy the target |
 | `Esc` | Close the preview or cancel hints |
 
 Standard footnotes jump to their definitions; inline footnotes are preview-only. Other non-Markdown file links open normally without a preview.
+
+`y` copies what the selected target points to, as written in Markdown, and keeps the selection and preview open:
+
+| Selected target | Copies |
+| --- | --- |
+| `[[Note#Heading\|alias]]`, `![[Note#Heading]]` | `Note#Heading`, without the alias |
+| `[text](folder/Note.md)` | `folder/Note.md` |
+| `[text](https://example.com)` | `https://example.com` |
+| Footnote `[^1]` or `^[...]` | The footnote's Markdown text |
+
+Press `Esc` first to show code-copy hints with `y` instead.
 
 External links show a URL confirmation before opening. Enable **Open external links immediately** to skip confirmation.
 
@@ -79,6 +100,19 @@ Confirm within **3 seconds**; otherwise, `Enter` opens in the current tab. Split
 ## Heading folds
 
 Press `F`, then type the label beside a visible heading to fold or unfold its section. The heading stays visible; its section includes nested headings up to the next heading of equal or higher level.
+
+## Code copy
+
+| Key | Copies |
+| --- | --- |
+| `y` | A visible code block. The label sits at the block's top-right. |
+| `Y` | A visible inline code span. A slightly smaller label sits on the span's top-left corner, so short code stays readable. |
+
+Type the label to copy; the copied code is outlined briefly.
+
+- **Code blocks** use Obsidian's own copy button, so the copy matches a mouse click: the code only, without the ` ``` ` fences or language name. Blocks without a native copy button, such as Mermaid diagrams, get no hint.
+- **Inline code** copies the text inside the backticks. Code Styler titles and icons are left out.
+- Blocks and spans inside callouts and embedded notes are included.
 
 ## Reading focus
 

@@ -1,6 +1,7 @@
 import type { App } from 'obsidian';
 import { resolveMarkdownTarget } from './splitLinkNavigator';
 import type { FootnoteResolver } from './footnoteResolver';
+import { createHintBadge } from './hintModes';
 import { parseHttpUrl } from './linkPreviewSession';
 import type { LinkHintTarget } from './linkPreviewSession';
 
@@ -99,10 +100,7 @@ export function createHintElement(
 				: Math.max(bounds.left, Math.min(rootRect.left, bounds.right));
 		}
 	}
-	const el = doc.body.createSpan({ cls: 'vim-reading-nav-hint', text: label.toUpperCase() });
-	el.style.left = `${x}px`;
-	el.style.top = `${y}px`;
-	return el;
+	return createHintBadge(doc, label, x, y);
 }
 
 function ordinaryLinkTarget(

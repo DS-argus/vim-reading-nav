@@ -115,10 +115,17 @@ export class FootnoteResolver {
 		return generation;
 	}
 
+	/**
+	 * True while `anchors` still belong to the latest render of `element`.
+	 *
+	 * Connection is deliberately not required: Obsidian renders the sections of
+	 * a long note before mounting them and runs post-processors only once, so a
+	 * section below the viewport is still detached here. Skipping it would leave
+	 * its footnotes without hints until the next full re-render.
+	 */
 	private isCurrentAssociation(element: HTMLElement, generation: number, anchors: HTMLAnchorElement[]): boolean {
-		return element.isConnected
-			&& this.associationGenerations.get(element) === generation
-			&& anchors.every((anchor) => anchor.isConnected && element.contains(anchor));
+		return this.associationGenerations.get(element) === generation
+			&& anchors.every((anchor) => element.contains(anchor));
 	}
 
 	private parseReference(source: string): FootnoteReference | null {

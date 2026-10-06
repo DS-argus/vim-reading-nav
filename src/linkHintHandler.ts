@@ -1,6 +1,8 @@
 import { MarkdownView } from 'obsidian';
 import type VimReadingNavPlugin from './main';
 import { FootnoteResolver } from './footnoteResolver';
+import { HintOverlay } from './hintModes';
+import type { HintMode, HintModes } from './hintModes';
 import {
 	collectVisibleLinkHintTargets,
 	createHintElement,
@@ -9,44 +11,41 @@ import {
 import { LinkPreviewSession } from './linkPreviewSession';
 import type { LinkHintTarget } from './linkPreviewSession';
 import { bindingMatchesEvent } from './settings';
-import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
+import { consumeKey, getPreviewViewIn, getScrollElement, isFocusInModal, isLiveIn } from './viewUtils';
 
-const HINT_CHARS = 'asdfghjklqwertyuiopzxcvbnm';
-
-interface Hint {
-	label: string;
-	target: LinkHintTarget;
-	el: HTMLElement;
-}
+const TRIGGER_KEY = 'f';
 
 interface DocumentState {
-	hints: Hint[];
-	typed: string;
-	active: boolean;
+	hints: HintOverlay<LinkHintTarget>;
+	/** The focused link and its preview. They outlive the hints that chose them. */
 	session: LinkPreviewSession;
 }
 
 /** Vimium-style link hint mode for reading mode. */
-export class LinkHintHandler {
+export class LinkHintHandler implements HintMode {
 	private readonly footnotes: FootnoteResolver;
 	private readonly states = new Map<Document, DocumentState>();
 
-	constructor(private readonly plugin: VimReadingNavPlugin) {
+	constructor(private readonly plugin: VimReadingNavPlugin, private readonly modes: HintModes) {
 		this.footnotes = new FootnoteResolver(plugin.app);
+		modes.add(this);
 	}
 
 	register(): void {
+		const { workspace } = this.plugin.app;
 		this.footnotes.register(this.plugin);
-		this.plugin.registerEvent(this.plugin.app.workspace.on('active-leaf-change', (leaf) => {
+		this.plugin.registerEvent(workspace.on('active-leaf-change', (leaf) => {
 			const doc = leaf?.view.containerEl.ownerDocument;
 			if (!doc) return;
 			const state = this.stateFor(doc);
+			// Opening a split moves focus to the new pane; that must not drop the link being opened.
 			if (!state.session.isOpeningSplit()) this.resetState(state);
 		}));
-		this.plugin.registerEvent(this.plugin.app.workspace.on('layout-change', () => this.reapInvalidStates()));
-		this.plugin.registerEvent(this.plugin.app.workspace.on('window-close', (win) => this.disposeDocument(win.doc)));
+		this.plugin.registerEvent(workspace.on('layout-change', () => this.reapInvalidStates()));
+		this.plugin.registerEvent(workspace.on('window-close', (win) => this.disposeDocument(win.doc)));
 		this.plugin.register(() => this.cleanup());
-		this.plugin.app.workspace.iterateAllLeaves((leaf) => {
+		// Re-render open reading views so footnote links already on screen get resolved.
+		workspace.iterateAllLeaves((leaf) => {
 			if (leaf.view instanceof MarkdownView && leaf.view.getMode() === 'preview') {
 				void leaf.view.previewMode.rerender(true);
 			}
@@ -59,21 +58,29 @@ export class LinkHintHandler {
 		this.plugin.registerDomEvent(doc, 'keydown', (evt: KeyboardEvent) => {
 			this.cancelPendingForConfiguredScroll(evt, doc);
 		}, true);
-		this.plugin.registerDomEvent(doc, 'scroll', () => {
-			const state = this.stateFor(doc);
-			if (state.active) this.exitHintMode(state);
-		}, { capture: true });
+		// Badges sit at fixed viewport positions, so scrolling or resizing leaves them misplaced.
+		this.plugin.registerDomEvent(doc, 'scroll', () => this.stateFor(doc).hints.close(), { capture: true });
 		const win = doc.defaultView;
 		if (win) this.plugin.registerDomEvent(win, 'resize', () => {
 			const state = this.stateFor(doc);
-			if (state.active) this.exitHintMode(state);
+			state.hints.close();
 			state.session.resize();
 		});
+	}
+
+	isActive(doc: Document): boolean {
+		return this.states.get(doc)?.hints.isShowing() ?? false;
+	}
+
+	/** Closes the hints only; a focused link and its preview stay. */
+	closeHints(doc: Document): void {
+		this.states.get(doc)?.hints.close();
 	}
 
 	settingsChanged(): void {
 		for (const state of this.states.values()) this.resetState(state);
 	}
+
 	cleanup(): void {
 		for (const state of this.states.values()) this.disposeState(state);
 		this.states.clear();
@@ -82,17 +89,22 @@ export class LinkHintHandler {
 	private handleKeyDown(evt: KeyboardEvent, doc: Document): void {
 		if (isFocusInModal(evt, doc)) return;
 		const state = this.stateFor(doc);
-		if (state.active) {
-			this.handleHintKey(evt, doc, state);
+		if (state.hints.isShowing()) {
+			const target = state.hints.handleKey(evt);
+			if (target && isLiveIn(hintTargetElement(target), doc)) state.session.focusHint(target);
 			return;
 		}
+		// Another mode's hints own every key, even while a link stays focused.
+		if (this.modes.isShowing(doc)) return;
+		// A focused link answers its own keys first: Enter, Esc, y, and the split keys.
 		if (state.session.handleKey(evt)) return;
 		const view = getPreviewViewIn(this.plugin.app, doc);
-		if (!view || evt.ctrlKey || evt.metaKey || evt.altKey || evt.key !== 'f') return;
-		this.consume(evt);
-		this.enterHintMode(view, doc, state);
+		if (!view || evt.ctrlKey || evt.metaKey || evt.altKey || evt.key !== TRIGGER_KEY) return;
+		consumeKey(evt);
+		if (!evt.repeat) this.showHints(view, doc, state);
 	}
 
+	/** Page scrolling cancels a pending split direction, so a stale `v` cannot fire later. */
 	private cancelPendingForConfiguredScroll(evt: KeyboardEvent, doc: Document): void {
 		if (isFocusInModal(evt, doc) || !getPreviewViewIn(this.plugin.app, doc)) return;
 		const settings = this.plugin.settings;
@@ -103,68 +115,25 @@ export class LinkHintHandler {
 		this.stateFor(doc).session.cancelPendingDirection();
 	}
 
-	private enterHintMode(view: MarkdownView, doc: Document, state: DocumentState): void {
+	private showHints(view: MarkdownView, doc: Document, state: DocumentState): void {
+		// Choosing a new link replaces the focused one, so its preview closes now.
 		this.resetState(state);
 		const scrollEl = getScrollElement(view);
 		const sourcePath = view.file?.path;
 		if (!scrollEl || !sourcePath) return;
 		const targets = collectVisibleLinkHintTargets(scrollEl, this.plugin.app, sourcePath, this.footnotes);
-		if (targets.length === 0) return;
-		const labels = this.generateLabels(targets.length);
 		const bounds = scrollEl.getBoundingClientRect();
-		state.active = true;
-		targets.forEach((target, index) => {
-			const label = labels[index];
-			if (label) state.hints.push({ label, target, el: createHintElement(label, target, doc, bounds) });
-		});
-	}
-
-	private handleHintKey(evt: KeyboardEvent, doc: Document, state: DocumentState): void {
-		if (evt.ctrlKey || evt.metaKey || evt.altKey) return this.exitHintMode(state);
-		this.consume(evt);
-		if (evt.key === 'Escape') return this.exitHintMode(state);
-		if (evt.key === 'Backspace') {
-			state.typed = state.typed.slice(0, -1);
-			return this.updateHintDisplay(state);
-		}
-		if (evt.key.length !== 1 || !HINT_CHARS.includes(evt.key.toLowerCase())) return;
-		state.typed += evt.key.toLowerCase();
-		const matches = state.hints.filter((hint) => hint.label.startsWith(state.typed));
-		if (matches.length === 0) return this.exitHintMode(state);
-		const exact = matches.find((hint) => hint.label === state.typed);
-		if (exact && matches.length === 1) {
-			this.exitHintMode(state);
-			this.selectHint(doc, state, exact);
-			return;
-		}
-		this.updateHintDisplay(state);
-	}
-
-	private selectHint(doc: Document, state: DocumentState, hint: Hint): void {
-		const element = hintTargetElement(hint.target);
-		if (!element.isConnected || element.ownerDocument !== doc) return;
-		state.session.focusHint(hint.target);
+		state.hints.show(targets, (label, target) => createHintElement(label, target, doc, bounds));
 	}
 
 	private resetState(state: DocumentState): void {
-		this.exitHintMode(state);
+		state.hints.close();
 		state.session.reset();
 	}
 
 	private disposeState(state: DocumentState): void {
-		this.exitHintMode(state);
+		state.hints.close();
 		state.session.dispose();
-	}
-
-	private exitHintMode(state: DocumentState): void {
-		state.hints.forEach((hint) => hint.el.remove());
-		state.hints = [];
-		state.typed = '';
-		state.active = false;
-	}
-
-	private updateHintDisplay(state: DocumentState): void {
-		state.hints.forEach((hint) => hint.el.toggleClass('vim-reading-nav-hint-inactive', !hint.label.startsWith(state.typed)));
 	}
 
 	private disposeDocument(doc: Document): void {
@@ -174,16 +143,14 @@ export class LinkHintHandler {
 		this.states.delete(doc);
 	}
 
+	/** After a layout change, drop closed windows, hints on re-rendered links, and a stale focus. */
 	private reapInvalidStates(): void {
 		for (const [doc, state] of this.states) {
 			if (doc.defaultView?.closed) {
 				this.disposeDocument(doc);
 				continue;
 			}
-			if (state.active && state.hints.some((hint) => {
-				const element = hintTargetElement(hint.target);
-				return !element.isConnected || element.ownerDocument !== doc;
-			})) this.exitHintMode(state);
+			if (state.hints.targets().some((target) => !isLiveIn(hintTargetElement(target), doc))) state.hints.close();
 			state.session.reapInvalid();
 		}
 	}
@@ -191,25 +158,9 @@ export class LinkHintHandler {
 	private stateFor(doc: Document): DocumentState {
 		let state = this.states.get(doc);
 		if (!state) {
-			state = { hints: [], typed: '', active: false, session: new LinkPreviewSession(this.plugin, this.footnotes, doc) };
+			state = { hints: new HintOverlay(), session: new LinkPreviewSession(this.plugin, this.footnotes, doc) };
 			this.states.set(doc, state);
 		}
 		return state;
-	}
-
-	private generateLabels(count: number): string[] {
-		const chars = HINT_CHARS.split('');
-		if (count <= chars.length) return chars.slice(0, count);
-		const labels: string[] = [];
-		for (const first of chars) for (const second of chars) {
-			labels.push(first + second);
-			if (labels.length >= count) return labels;
-		}
-		return labels;
-	}
-
-	private consume(evt: KeyboardEvent): void {
-		evt.preventDefault();
-		evt.stopImmediatePropagation();
 	}
 }
