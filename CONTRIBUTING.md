@@ -50,8 +50,12 @@ src/
   main.ts            # Plugin lifecycle and settings registration
   scrollHandler.ts   # Reading-mode keydown listener and configurable page scrolling
   linkHintHandler.ts # Vimium-style link hint mode (f) with persistent previews
+  codeCopyHintHandler.ts # Vimium-style code block (y) and inline code (Y) copy hints
+  hintModes.ts       # Hint labels, key rules, and the hint overlay shared by every mode
+  linkCopyText.ts    # What y copies from a focused link, embed, URL, or footnote
+  clipboard.ts       # Clipboard writes and the brief copied outline
   cursorManager.ts   # Cursor correction when switching reading → source mode
-  viewUtils.ts     # Shared guards/lookups (modal focus, reading view, scroll element)
+  viewUtils.ts     # Shared guards/lookups (modal focus, reading view, scroll element, live targets)
   types.ts         # Shared TypeScript interfaces
 esbuild.config.mjs # Bundle configuration
 eslint.config.mts  # Lint configuration
@@ -69,7 +73,7 @@ versions.json      # Plugin version → minimum Obsidian version map
    The folder must contain `main.js`, `manifest.json`, and `styles.css`.
 3. In Obsidian, enable **Settings → Community plugins → Vim Reading Navigation**. Vim key bindings do not need to be enabled.
 4. In **Settings → Vim Reading Navigation**, verify `Ctrl+D` and `Ctrl+U` are the default half-page bindings, full-page bindings are unset, and Record, Clear, Reset, Escape cancellation, duplicate rejection, and invalid-key rejection work. On Windows/Linux, verify the `Ctrl+F` conflict warning.
-5. In Reading mode, verify the configured bindings work only in the current Reading view (including pop-outs), move half a viewport or one Vim-style page while preserving reading context, and leave editor Vim keys untouched. Verify they are configured in **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Exercise bare `j`, `k`, `d`, `u`, `gg`, `G`, `f`, and `Shift+J`/`Shift+K`.
+5. In Reading mode, verify the configured bindings work only in the current Reading view (including pop-outs), move half a viewport or one Vim-style page while preserving reading context, and leave editor Vim keys untouched. Verify they are configured in **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Exercise bare `j`, `k`, `d`, `u`, `gg`, `G`, `f`, `F`, `y`, `Y`, and `Shift+J`/`Shift+K`.
 
 ## Coding conventions
 

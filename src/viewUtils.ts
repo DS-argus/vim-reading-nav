@@ -1,9 +1,8 @@
 import { App, MarkdownView } from 'obsidian';
 
 /**
- * Shared guards and lookups used by both the scroll handler and the link
- * hint handler. All functions are document-aware so they work in pop-out
- * windows as well as the main window.
+ * Shared guards and lookups for the keyboard handlers. All functions are
+ * document-aware so they work in pop-out windows as well as the main window.
  */
 
 /**
@@ -16,6 +15,21 @@ export function getPreviewViewIn(app: App, doc: Document): MarkdownView | null {
 	if (!view || view.getMode() !== 'preview') return null;
 	if (view.containerEl.ownerDocument !== doc) return null;
 	return view;
+}
+
+/**
+ * True while `el` is still rendered in `doc`. Reading view re-renders replace
+ * elements, so a target collected earlier may be detached or, after a
+ * pop-out move, belong to another window.
+ */
+export function isLiveIn(el: HTMLElement, doc: Document): boolean {
+	return el.isConnected && el.ownerDocument === doc;
+}
+
+/** Keeps a key from Obsidian and from every listener registered after this one. */
+export function consumeKey(evt: KeyboardEvent): void {
+	evt.preventDefault();
+	evt.stopImmediatePropagation();
 }
 
 export function getScrollElement(view: MarkdownView): HTMLElement | null {

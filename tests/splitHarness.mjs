@@ -3,6 +3,7 @@ import { build } from 'esbuild';
 // Bundle production session, navigator and event handler; replace only host/UI APIs.
 const result = await build({
 	stdin: { contents: `export { LinkHintHandler } from './src/linkHintHandler';
+		export { HintModes } from './src/hintModes';
 		export { MarkdownView, TFile, WorkspaceTabs } from 'obsidian';`, resolveDir: process.cwd() },
 	bundle: true, write: false, format: 'esm', platform: 'node',
 	plugins: [{ name: 'host-mocks', setup(build) {
@@ -26,11 +27,13 @@ const result = await build({
 			}`,
 			'./footnoteResolver': 'export class FootnoteResolver { register() {} }',
 			'./settings': 'export function bindingMatchesEvent() { return false; }',
-			'./viewUtils': 'export function getPreviewViewIn() {} export function getScrollElement() {} export function isFocusInModal() { return false; }',
+			'./viewUtils': `export function getPreviewViewIn() {} export function getScrollElement() {} export function isFocusInModal() { return false; }
+				export function isLiveIn(el, doc) { return el.isConnected && el.ownerDocument === doc; }
+				export function consumeKey(evt) { evt.preventDefault(); evt.stopImmediatePropagation(); }`,
 		}[path] }));
 	} }],
 });
-const { LinkHintHandler, MarkdownView, TFile, WorkspaceTabs } = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
+const { LinkHintHandler, HintModes, MarkdownView, TFile, WorkspaceTabs } = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
 
 export function harness({ adjacent = false, below = false, reflow = null, subpath = '', popout = false, embed = false, self = false } = {}) {
 	const trace = [];
@@ -103,7 +106,7 @@ export function harness({ adjacent = false, below = false, reflow = null, subpat
 	registerEvent() {}, register() {}, registerDomEvent() {},
 	addChild(child) { child.onload(); return child; }, removeChild(child) { child.unload(); return child; },
 	};
-	const handler = new LinkHintHandler(plugin);
+	const handler = new LinkHintHandler(plugin, new HintModes());
 	handler.register();
 	session = handler.stateFor(doc).session;
 	const open = session.navigator.open.bind(session.navigator);

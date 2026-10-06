@@ -6,6 +6,7 @@ import { parseHTML } from 'linkedom';
 const result = await build({
 	stdin: { contents: `
 		export { LinkHintHandler } from './src/linkHintHandler';
+		export { HintModes } from './src/hintModes';
 		export {
 			collectMarkdownEmbedTargets,
 			collectVisibleLinkHintTargets,
@@ -63,7 +64,7 @@ const result = await build({
 	} }],
 });
 
-const { LinkHintHandler, collectMarkdownEmbedTargets, collectVisibleLinkHintTargets, createHintElement, MarkdownView, TFile } = await import(
+const { LinkHintHandler, HintModes, collectMarkdownEmbedTargets, collectVisibleLinkHintTargets, createHintElement, MarkdownView, TFile } = await import(
 	`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`,
 );
 
@@ -152,7 +153,7 @@ function handlerFixture(contents, app, sourcePath = 'source.md') {
 		registerEvent() {},
 		register() {},
 	};
-	const handler = new LinkHintHandler(plugin);
+	const handler = new LinkHintHandler(plugin, new HintModes());
 	handler.registerTo(dom.document);
 	const state = handler.stateFor(dom.document);
 	const press = key => {
@@ -294,14 +295,15 @@ test('keeps hint state isolated per document and cancels disconnected targets', 
 	};
 	pressSecond('f');
 	const secondState = first.handler.stateFor(second.document);
-	assert.equal(first.state.active, true);
-	assert.equal(secondState.active, true);
-	assert.ok(first.state.hints.every(hint => hint.target.element.ownerDocument === first.document));
-	assert.ok(secondState.hints.every(hint => hint.target.element.ownerDocument === second.document));
-	secondState.session.focusHint(first.state.hints[0].target);
+	assert.equal(first.handler.isActive(first.document), true);
+	assert.equal(first.handler.isActive(second.document), true);
+	const [firstTarget] = first.state.hints.targets();
+	assert.ok(first.state.hints.targets().every(target => target.element.ownerDocument === first.document));
+	assert.ok(secondState.hints.targets().every(target => target.element.ownerDocument === second.document));
+	secondState.session.focusHint(firstTarget);
 	assert.equal(secondState.session.focusedTarget, null);
-	first.state.session.focusHint(first.state.hints[0].target);
-	const focused = first.state.hints[0].target.element;
+	first.state.session.focusHint(firstTarget);
+	const focused = firstTarget.element;
 	focused.remove();
 	first.state.session.reapInvalid();
 	assert.equal(first.state.session.focusedTarget, null);
