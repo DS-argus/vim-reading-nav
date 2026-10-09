@@ -9,7 +9,11 @@ import {
 
 import { footnoteDefinitionBodyMarkdown } from './footnoteResolver';
 import type { PreviewGuidance } from './previewGuidance';
+import { placePreview } from './previewPlacement';
+
 const SCROLL_STEP = 120;
+// Caps the preview to the space on its side of the focused link; see styles.css.
+const ROOM_PROPERTY = '--vim-reading-nav-preview-room';
 
 /** Renders and owns the lifetime of one persistent Reading-mode preview. */
 export class PersistentLinkPreview {
@@ -237,15 +241,17 @@ export class PersistentLinkPreview {
 	private position(shellEl: HTMLElement, targetEl: HTMLElement): void {
 		const win = targetEl.ownerDocument.defaultView;
 		if (!win) return;
-		const target = targetEl.getBoundingClientRect();
-		const margin = 12;
-		const width = shellEl.getBoundingClientRect().width;
-		const height = shellEl.getBoundingClientRect().height;
-		let left = target.right + margin;
-		if (left + width > win.innerWidth - margin) left = target.left - width - margin;
-		left = Math.max(margin, Math.min(left, win.innerWidth - width - margin));
-		const top = Math.max(margin, Math.min(target.top, win.innerHeight - height - margin));
-		shellEl.style.left = `${left}px`;
-		shellEl.style.top = `${top}px`;
+		// Measure the natural size first: the previous room must not cap it, and a
+		// fit-content preview must not shrink against the previous left edge.
+		shellEl.setCssStyles({ left: '0px', top: '0px', bottom: '' });
+		shellEl.setCssProps({ [ROOM_PROPERTY]: '' });
+		const { width, height } = shellEl.getBoundingClientRect();
+		const placement = placePreview(targetEl.getBoundingClientRect(), width, height, win.innerWidth, win.innerHeight);
+		shellEl.setCssStyles({
+			left: `${placement.left}px`,
+			top: placement.side === 'below' ? `${placement.inset}px` : '',
+			bottom: placement.side === 'above' ? `${placement.inset}px` : '',
+		});
+		shellEl.setCssProps({ [ROOM_PROPERTY]: `${placement.room}px` });
 	}
 }
