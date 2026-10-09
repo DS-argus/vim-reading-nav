@@ -59,6 +59,8 @@ In search, use `Enter` / `Shift+Enter` for the next / previous result.
 
 Press `f`, then type a hint label to select a link or Markdown embed.
 
+Selecting a target does not scroll the note unless the target is cut off at the edge of the pane. The preview opens below the target, or above it when it does not fit below.
+
 Supported targets include notes, headings, blocks, footnotes, external web links, and top-level Markdown embeds. Embed hints appear beside the native open icon. Links inside embeds and non-Markdown embeds are excluded.
 
 | Key after selection | Action |

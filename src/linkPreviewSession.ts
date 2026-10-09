@@ -362,7 +362,8 @@ export class LinkPreviewSession {
 			return;
 		}
 		link.addClass('vim-reading-nav-link-focused');
-		link.scrollIntoView({ block: 'center', behavior: 'auto' });
+		// Keep the reading position: scroll only enough to reveal a partly visible target.
+		link.scrollIntoView({ block: 'nearest', behavior: 'auto' });
 	}
 
 	private clear(closePreview: boolean): void {
