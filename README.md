@@ -19,6 +19,7 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 - Native in-document search from Reading mode with `/`
 - Main-window and pop-out-window support
 - [Reading focus](#reading-focus) with `z` or a native pane-header toggle, adjustable opacity, and configurable context blocks
+- [Bases](#bases) keyboard navigation (experimental): scrolling, `f` hints that click links and cards, group folds, view switching, and `/` search
 
 ## Key mappings
 
@@ -40,7 +41,7 @@ While hints are showing:
 - Press `Esc`, or any other key that is not a label, to close the hints. Hint keys (`f`, `F`, `y`, `Y`) and keys such as `G` or `/` only close the hints, so press the key again to use it.
 - `Ctrl`, `Cmd`, and `Alt` shortcuts close the hints and still run, for example `Ctrl+U` or Obsidian's own shortcuts.
 
-Mappings apply only in Reading mode and leave inputs, editors, and modals alone. Switching back to the editor also adjusts the cursor to the reading position.
+Mappings apply only in Reading mode and, when enabled, [Bases](#bases) files, and leave inputs, editors, and modals alone. Switching back to the editor also adjusts the cursor to the reading position.
 
 ### Page-scroll bindings
 
@@ -132,6 +133,30 @@ Configure **Settings → Vim Reading Navigation → Reading focus**:
 Lists, tables, code blocks, and embeds are treated as whole blocks, so large blocks may keep much of the screen bright.
 
 Preferences are saved, but focus starts off each time the plugin loads.
+
+## Bases
+
+**Experimental, off by default.** Turn on **Settings → Vim Reading Navigation → Experimental → Keyboard navigation in base files**. Bases has no public API for its own views, so this relies on Obsidian internals and an Obsidian update may break it.
+
+In a `.base` file:
+
+| Key | Action |
+| --- | --- |
+| `j` / `k` | Scroll down / up |
+| `h` / `l` | Scroll left / right; on a board, choose the previous / next column |
+| `d` / `u` | Scroll half a page down / up |
+| `gg` / `G` | Jump to the top / bottom |
+| `f` | Show hints for links, cards, and board cards |
+| `F` (`Shift+F`) | Show hints for group headings, to fold or unfold a group |
+| `J` / `K` (`Shift+J` / `Shift+K`) | Switch to the next / previous view |
+| `/` | Open the Bases search |
+
+Choosing a hint clicks the target exactly like the mouse: a link opens its note or web page, a card opens its note, and a group heading folds its group. There is no preview.
+
+- Scrolling, hints, and the page-scroll bindings work in Obsidian's table, cards, list, and board layouts. Views from other plugins, such as Maps, keep their own keys; `J` / `K` and `/` still work there.
+- A board scrolls each column on its own. The first column in view starts chosen, outlined in the accent color, and `j` / `k`, `d` / `u`, `gg` / `G`, and the page-scroll bindings scroll it. `h` / `l` move to the neighboring column and scroll the board to show it.
+- Group headings appear in a table, cards, or list grouped by a property. Board columns do not fold.
+- Keys the table uses itself, such as the arrow keys, `Tab`, and `Enter`, are left alone, and so is typing in a cell or the search box.
 
 ## Usage
 

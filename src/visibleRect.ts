@@ -11,7 +11,7 @@ export interface VisibleRect {
  * overflow-clipping ancestor up to `scrollEl`, such as embed bodies and
  * callouts. Returns null when nothing of it is visible.
  */
-export function visibleRect(el: HTMLElement, rect: DOMRect, scrollEl: HTMLElement, bounds: DOMRect): VisibleRect | null {
+export function visibleRect(el: HTMLElement, rect: DOMRect, scrollEl: HTMLElement, bounds: VisibleRect): VisibleRect | null {
 	if (rect.width <= 0 || rect.height <= 0) return null;
 	let visible = intersect(rect, bounds);
 	const win = el.ownerDocument.defaultView;

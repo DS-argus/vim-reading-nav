@@ -1,4 +1,6 @@
 import { Plugin } from 'obsidian';
+import { BasesHintHandler } from './basesHintHandler';
+import { BasesKeyHandler } from './basesKeyHandler';
 import { CodeCopyHintHandler } from './codeCopyHintHandler';
 import { CursorManager } from './cursorManager';
 import { HintModes } from './hintModes';
@@ -18,6 +20,8 @@ export default class VimReadingNavPlugin extends Plugin {
 	private readingFocus: ReadingFocus | null = null;
 	private headingFoldHints: HeadingFoldHintHandler | null = null;
 	private codeCopyHints: CodeCopyHintHandler | null = null;
+	private basesHints: BasesHintHandler | null = null;
+	private basesKeys: BasesKeyHandler | null = null;
 	private hintModes: HintModes | null = null;
 
 	async onload(): Promise<void> {
@@ -42,6 +46,10 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.headingFoldHints.register();
 		this.codeCopyHints = new CodeCopyHintHandler(this, hintModes);
 		this.codeCopyHints.register();
+		this.basesHints = new BasesHintHandler(this, hintModes);
+		this.basesHints.register();
+		this.basesKeys = new BasesKeyHandler(this);
+		this.basesKeys.register();
 		new CursorManager(this).register();
 
 		this.searchHandler = new ReadingModeSearchHandler(this);
@@ -71,6 +79,8 @@ export default class VimReadingNavPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		this.linkHints?.settingsChanged();
 		normalizeReadingFocusSettings(this.settings);
+		this.basesHints?.settingsChanged();
+		this.basesKeys?.settingsChanged();
 		this.readingFocus?.settingsChanged();
 		await this.saveData(this.settings);
 	}
@@ -81,6 +91,7 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.linkHints?.cleanup();
 		this.headingFoldHints?.cleanup();
 		this.codeCopyHints?.cleanup();
+		this.basesHints?.cleanup();
 	}
 
 	private registerForDocument(doc: Document): void {
@@ -91,6 +102,9 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.linkHints?.registerTo(doc);
 		this.headingFoldHints?.registerTo(doc);
 		this.codeCopyHints?.registerTo(doc);
+		// Bases listeners use the capture phase, ahead of a focused table. Hints come before keys.
+		this.basesHints?.registerTo(doc);
+		this.basesKeys?.registerTo(doc);
 		this.scrollHandler?.registerTo(doc);
 		this.searchHandler?.registerTo(doc);
 		this.readingFocus?.registerTo(doc);

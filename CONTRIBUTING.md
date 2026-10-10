@@ -51,6 +51,10 @@ src/
   scrollHandler.ts   # Reading-mode keydown listener and configurable page scrolling
   linkHintHandler.ts # Vimium-style link hint mode (f) with persistent previews
   codeCopyHintHandler.ts # Vimium-style code block (y) and inline code (Y) copy hints
+  basesHintHandler.ts # Vimium-style hints that click links and cards (f) or fold groups (F) in Bases files
+  basesKeyHandler.ts # Experimental Bases keys: scrolling, board columns, view switching, and search
+  basesBoard.ts      # The board column that j/k scroll in a Bases kanban view
+  basesView.ts       # Active Bases view, its layout and scroll element, and view switching
   hintModes.ts       # Hint labels, key rules, and the hint overlay shared by every mode
   linkCopyText.ts    # What y copies from a focused link, embed, URL, or footnote
   clipboard.ts       # Clipboard writes and the brief copied outline

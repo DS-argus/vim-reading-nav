@@ -19,6 +19,7 @@ export interface VimReadingNavSettings {
 	readingFocusOpacity: number;
 	readingFocusContextBlocks: number;
 	showPreviewOpeningGuidance: boolean;
+	enableBasesNavigation: boolean;
 }
 
 export const DEFAULT_SETTINGS: VimReadingNavSettings = {
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: VimReadingNavSettings = {
 	readingFocusOpacity: 50,
 	readingFocusContextBlocks: 2,
 	showPreviewOpeningGuidance: true,
+	enableBasesNavigation: false,
 };
 
 export function normalizeReadingFocusSettings(settings: VimReadingNavSettings): void {
@@ -120,9 +122,9 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 		});
 		const title = callout.createDiv({ cls: 'callout-title' });
 		setIcon(title.createDiv({ cls: 'callout-icon' }), 'info');
-		title.createDiv({ cls: 'callout-title-inner', text: 'Reading mode only' });
+		title.createDiv({ cls: 'callout-title-inner', text: 'Where these settings apply' });
 		callout.createDiv({ cls: 'callout-content' }).createEl('p', {
-			text: 'These settings apply only to Markdown notes in reading mode.',
+			text: 'Markdown notes in reading mode, and base files when the experimental setting below is on.',
 		});
 		new Setting(this.containerEl).setName('Scrolling').setHeading();
 		for (const definition of BINDINGS) this.displayBinding(definition);
@@ -179,6 +181,16 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 				.setDisabled(!this.plugin.settings.enableSplitOpening)
 				.onChange(async (value) => {
 					this.plugin.settings.showPreviewOpeningGuidance = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(this.containerEl).setName('Experimental').setHeading();
+		new Setting(this.containerEl)
+			.setName('Keyboard navigation in base files')
+			.setDesc('Scroll, click links and cards, fold groups, and switch views with the keyboard in table, cards, list, and board views. Relies on undocumented Obsidian internals, so an Obsidian update may break it.')
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.enableBasesNavigation)
+				.onChange(async (value) => {
+					this.plugin.settings.enableBasesNavigation = value;
 					await this.plugin.saveSettings();
 				}));
 	}

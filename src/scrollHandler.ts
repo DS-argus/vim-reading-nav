@@ -3,10 +3,34 @@ import { bindingMatchesEvent } from './settings';
 import type { VimReadingNavSettings } from './settings';
 import { getPreviewViewIn, getScrollElement, isFocusInModal } from './viewUtils';
 
-const DOUBLE_G_TIMEOUT_MS = 500;
+export const DOUBLE_G_TIMEOUT_MS = 500;
 const FALLBACK_LINE_HEIGHT_PX = 24;
 
-type ScrollDirection = 1 | -1;
+export type ScrollDirection = 1 | -1;
+
+export interface PageScroll {
+	amount: ScrollDirection;
+	distance: 'half' | 'full';
+}
+
+/** The page scroll a configured binding asks for, if `evt` matches one. Bases scrolling shares the bindings. */
+export function configuredPageScroll(settings: VimReadingNavSettings, evt: KeyboardEvent): PageScroll | null {
+	if (bindingMatchesEvent(settings.halfPageDown, evt)) return { amount: 1, distance: 'half' };
+	if (bindingMatchesEvent(settings.halfPageUp, evt)) return { amount: -1, distance: 'half' };
+	if (bindingMatchesEvent(settings.fullPageDown, evt)) return { amount: 1, distance: 'full' };
+	if (bindingMatchesEvent(settings.fullPageUp, evt)) return { amount: -1, distance: 'full' };
+	return null;
+}
+
+export function scrollHalfPage(scrollEl: HTMLElement, direction: ScrollDirection): void {
+	scrollEl.scrollTop += direction * (scrollEl.clientHeight / 2);
+}
+
+/** Scrolls a page, keeping two lines of the old page in view. */
+export function scrollFullPage(scrollEl: HTMLElement, direction: ScrollDirection, lineHeight: number): void {
+	const distance = Math.max(lineHeight, scrollEl.clientHeight - (2 * lineHeight));
+	scrollEl.scrollTop += direction * distance;
+}
 
 export class ReadingModeScrollHandler {
 	private lastGPressTime = 0;
@@ -30,15 +54,15 @@ export class ReadingModeScrollHandler {
 		const scrollEl = this.getReadingScrollElement(evt, doc);
 		if (!scrollEl) return;
 
-		const direction = this.getConfiguredDirection(evt);
+		const direction = configuredPageScroll(this.settings, evt);
 		if (!direction) return;
 
 		evt.preventDefault();
 		evt.stopImmediatePropagation();
 		if (direction.distance === 'half') {
-			this.scrollHalfPage(scrollEl, direction.amount);
+			scrollHalfPage(scrollEl, direction.amount);
 		} else {
-			this.scrollFullPage(scrollEl, direction.amount);
+			scrollFullPage(scrollEl, direction.amount, this.getCssLineHeight(scrollEl));
 		}
 	}
 
@@ -60,11 +84,11 @@ export class ReadingModeScrollHandler {
 				break;
 			case 'd':
 				evt.preventDefault();
-				this.scrollHalfPage(scrollEl, 1);
+				scrollHalfPage(scrollEl, 1);
 				break;
 			case 'u':
 				evt.preventDefault();
-				this.scrollHalfPage(scrollEl, -1);
+				scrollHalfPage(scrollEl, -1);
 				break;
 			case 'g': {
 				evt.preventDefault();
@@ -89,24 +113,6 @@ export class ReadingModeScrollHandler {
 
 		const view = getPreviewViewIn(this.plugin.app, doc);
 		return view ? getScrollElement(view) : null;
-	}
-
-	private getConfiguredDirection(evt: KeyboardEvent): { amount: ScrollDirection; distance: 'half' | 'full' } | null {
-		if (bindingMatchesEvent(this.settings.halfPageDown, evt)) return { amount: 1, distance: 'half' };
-		if (bindingMatchesEvent(this.settings.halfPageUp, evt)) return { amount: -1, distance: 'half' };
-		if (bindingMatchesEvent(this.settings.fullPageDown, evt)) return { amount: 1, distance: 'full' };
-		if (bindingMatchesEvent(this.settings.fullPageUp, evt)) return { amount: -1, distance: 'full' };
-		return null;
-	}
-
-	private scrollHalfPage(scrollEl: HTMLElement, direction: ScrollDirection): void {
-		scrollEl.scrollTop += direction * (scrollEl.clientHeight / 2);
-	}
-
-	private scrollFullPage(scrollEl: HTMLElement, direction: ScrollDirection): void {
-		const lineHeight = this.getCssLineHeight(scrollEl);
-		const distance = Math.max(lineHeight, scrollEl.clientHeight - (2 * lineHeight));
-		scrollEl.scrollTop += direction * distance;
 	}
 
 	private getCssLineHeight(scrollEl: HTMLElement): number {
