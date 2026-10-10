@@ -222,3 +222,8 @@
 	outline: 2px solid var(--text-success);
 	outline-offset: 2px;
 }
+
+/* The board column that j/k scroll in a Bases kanban view. Inset, since the column clips its overflow. */
+.bases-kanban-column.vim-reading-nav-board-column {
+	box-shadow: inset 0 0 0 2px var(--interactive-accent);
+}
