@@ -116,6 +116,24 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 	display(): void {
 		this.stopRecording();
 		this.containerEl.empty();
+		const support = this.containerEl.createDiv({
+			cls: 'callout',
+			attr: { 'data-callout': 'note' },
+		});
+		const supportTitle = support.createDiv({ cls: 'callout-title' });
+		setIcon(supportTitle.createDiv({ cls: 'callout-icon' }), 'heart');
+		supportTitle.createDiv({ cls: 'callout-title-inner', text: 'Support' });
+		const supportContent = support.createDiv({ cls: 'callout-content' });
+		const issue = supportContent.createEl('p', { text: 'Found a problem? ' });
+		issue.createEl('a', {
+			text: 'Report an issue',
+			href: 'https://github.com/DS-argus/vim-reading-nav/issues',
+		});
+		const star = supportContent.createEl('p', { text: 'Enjoying this plugin? ' });
+		star.createEl('a', {
+			text: 'Star on GitHub',
+			href: 'https://github.com/DS-argus/vim-reading-nav',
+		});
 		const callout = this.containerEl.createDiv({
 			cls: 'callout',
 			attr: { 'data-callout': 'note' },
@@ -124,7 +142,7 @@ export class VimReadingNavSettingTab extends PluginSettingTab {
 		setIcon(title.createDiv({ cls: 'callout-icon' }), 'info');
 		title.createDiv({ cls: 'callout-title-inner', text: 'Where these settings apply' });
 		callout.createDiv({ cls: 'callout-content' }).createEl('p', {
-			text: 'Markdown notes in reading mode, and base files when the experimental setting below is on.',
+			text: 'Markdown notes in reading mode, including the switch back to editing, and base files when the experimental setting below is on.',
 		});
 		new Setting(this.containerEl).setName('Scrolling').setHeading();
 		for (const definition of BINDINGS) this.displayBinding(definition);

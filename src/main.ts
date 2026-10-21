@@ -23,6 +23,7 @@ export default class VimReadingNavPlugin extends Plugin {
 	private basesHints: BasesHintHandler | null = null;
 	private basesKeys: BasesKeyHandler | null = null;
 	private hintModes: HintModes | null = null;
+	private cursorManager: CursorManager | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -50,7 +51,8 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.basesHints.register();
 		this.basesKeys = new BasesKeyHandler(this);
 		this.basesKeys.register();
-		new CursorManager(this).register();
+		this.cursorManager = new CursorManager(this);
+		this.cursorManager.register();
 
 		this.searchHandler = new ReadingModeSearchHandler(this);
 		// Attach DOM listeners to the main window, every pop-out window that
@@ -108,5 +110,6 @@ export default class VimReadingNavPlugin extends Plugin {
 		this.scrollHandler?.registerTo(doc);
 		this.searchHandler?.registerTo(doc);
 		this.readingFocus?.registerTo(doc);
+		this.cursorManager?.registerTo(doc);
 	}
 }

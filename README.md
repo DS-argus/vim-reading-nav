@@ -15,7 +15,7 @@ Navigate, search, scroll, preview, open links, and focus on what you read in Obs
 - [Code copy](#code-copy) with Vimium-style `y` hints for code blocks and `Y` hints for inline code
 - Persistent, mouse-independent Markdown previews for internal links and standard or inline footnotes
 - Local external-link destination confirmation before opening in the system browser
-- Cursor correction when switching from Reading mode back to the editor
+- [Cursor placement](#switching-between-reading-and-editing) starting 45% down the viewport when switching from Reading mode to the editor, without requesting a scroll
 - Native in-document search from Reading mode with `/`
 - Main-window and pop-out-window support
 - [Reading focus](#reading-focus) with `z` or a native pane-header toggle, adjustable opacity, and configurable context blocks
@@ -41,7 +41,7 @@ While hints are showing:
 - Press `Esc`, or any other key that is not a label, to close the hints. Hint keys (`f`, `F`, `y`, `Y`) and keys such as `G` or `/` only close the hints, so press the key again to use it.
 - `Ctrl`, `Cmd`, and `Alt` shortcuts close the hints and still run, for example `Ctrl+U` or Obsidian's own shortcuts.
 
-Mappings apply only in Reading mode and, when enabled, [Bases](#bases) files, and leave inputs, editors, and modals alone. Switching back to the editor also adjusts the cursor to the reading position.
+Mappings apply only in Reading mode and, when enabled, [Bases](#bases) files, and leave inputs, editors, and modals alone. Switching from Reading mode to the editor also triggers cursor placement without requesting a scroll; see [Switching between reading and editing](#switching-between-reading-and-editing).
 
 ### Page-scroll bindings
 
@@ -134,6 +134,18 @@ Lists, tables, code blocks, and embeds are treated as whole blocks, so large blo
 
 Preferences are saved, but focus starts off each time the plugin loads.
 
+## Switching between reading and editing
+
+Obsidian controls the viewport when switching modes. This plugin does not record or restore scroll positions, and does not correct Obsidian's mode-switch positioning. It only places the cursor within the editor viewport after switching from Reading mode.
+
+Cursor placement starts **45% down the editor viewport**. This is fixed, with no setting:
+
+- Every switch to editing finds a new cursor position, regardless of the previous cursor location.
+- Starting at that height, the plugin searches downward for a fully visible text row and places the cursor at its start. It uses editor coordinates to skip rendered blocks and reject rows above the starting point; it does not parse block types.
+- Cursor placement never requests a scroll. If no suitable row can be identified in the visible search area, no cursor move is made.
+
+Each pane and pop-out is handled separately. Pending cursor placement is cancelled by user interaction or a changed view. Late-loading images and Live Preview formatting can still change the layout.
+
 ## Bases
 
 **Experimental, off by default.** Turn on **Settings → Vim Reading Navigation → Experimental → Keyboard navigation in base files**. Bases has no public API for its own views, so this relies on Obsidian internals and an Obsidian update may break it.
@@ -225,6 +237,7 @@ A fork of [**obsidian-vim-scrolling**](https://github.com/xlongfeng/obsidian-vim
 
 - Plain `d` / `u` half-page scrolling
 - Configurable Reading-mode page-scroll bindings
+- Cursor placement starting 45% down the viewport when switching to editing, without requesting a scroll
 - An `f` Vimium-style link hint mode with persistent previews and link activation
 - Pop-out window support
 - `/` shortcut for Obsidian's native in-document search

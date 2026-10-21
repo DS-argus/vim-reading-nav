@@ -46,7 +46,7 @@ Uses ESLint with [`eslint-plugin-obsidianmd`](https://github.com/obsidianmd/esli
 
 ```
 src/
-  settings.ts        # Reading-mode page-scroll binding settings and recorder
+  settings.ts        # Settings tab, defaults, normalization: page-scroll bindings, reading focus, links and previews, experimental
   main.ts            # Plugin lifecycle and settings registration
   scrollHandler.ts   # Reading-mode keydown listener and configurable page scrolling
   linkHintHandler.ts # Vimium-style link hint mode (f) with persistent previews
@@ -58,7 +58,8 @@ src/
   hintModes.ts       # Hint labels, key rules, and the hint overlay shared by every mode
   linkCopyText.ts    # What y copies from a focused link, embed, URL, or footnote
   clipboard.ts       # Clipboard writes and the brief copied outline
-  cursorManager.ts   # Cursor correction when switching reading → source mode
+  cursorManager.ts   # Per-pane mode tracking and cancellable, cursor-only placement
+  cursorPlacement.ts # Nearby visible text targets, excluding block widgets
   viewUtils.ts     # Shared guards/lookups (modal focus, reading view, scroll element, live targets)
   types.ts         # Shared TypeScript interfaces
 esbuild.config.mjs # Bundle configuration
@@ -78,6 +79,7 @@ versions.json      # Plugin version → minimum Obsidian version map
 3. In Obsidian, enable **Settings → Community plugins → Vim Reading Navigation**. Vim key bindings do not need to be enabled.
 4. In **Settings → Vim Reading Navigation**, verify `Ctrl+D` and `Ctrl+U` are the default half-page bindings, full-page bindings are unset, and Record, Clear, Reset, Escape cancellation, duplicate rejection, and invalid-key rejection work. On Windows/Linux, verify the `Ctrl+F` conflict warning.
 5. In Reading mode, verify the configured bindings work only in the current Reading view (including pop-outs), move half a viewport or one Vim-style page while preserving reading context, and leave editor Vim keys untouched. Verify they are configured in **Settings → Vim Reading Navigation**, not Obsidian Hotkeys. Exercise bare `j`, `k`, `d`, `u`, `gg`, `G`, `f`, `F`, `y`, `Y`, and `Shift+J`/`Shift+K`.
+6. After switching from Reading mode to Live Preview or Source mode, every switch should search anew from 45% down the viewport, even with a visible cursor. A block at that height must lead to the first fully visible text below it, never above it; if no such row is visible, leave the cursor untouched. Neither direction may request a scroll or restore a saved position: viewport positioning belongs to Obsidian. Repeat in differently scrolled splits and pop-outs. Check that moving or selecting during a switch cancels pending cursor placement. Verify there is no Editing section or cursor slider in settings, and the top Support callout links to the project issue tracker and GitHub repository.
 
 ## Coding conventions
 
